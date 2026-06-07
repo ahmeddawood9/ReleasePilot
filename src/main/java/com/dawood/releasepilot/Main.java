@@ -5,6 +5,7 @@ import com.dawood.releasepilot.deployment.DeploymentRepository;
 import com.dawood.releasepilot.deployment.DeploymentResponse;
 import com.dawood.releasepilot.deployment.DeploymentService;
 import com.dawood.releasepilot.deployment.InMemoryDeploymentRepository;
+import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 
 import java.util.List;
 
@@ -44,5 +45,14 @@ public class Main {
         List<DeploymentResponse> deployments = service.listDeployments();
         System.out.println("\nAll deployments:");
         deployments.forEach(System.out::println);
+
+        // Try invalid transition:
+        // SUCCESS deployment cannot become FAILED.
+        try {
+            service.markFailed(createdDeployment.id());
+        } catch (InvalidDeploymentStateException ex) {
+            System.out.println("\nInvalid transition caught:");
+            System.out.println(ex.getMessage());
+        }
     }
 }
