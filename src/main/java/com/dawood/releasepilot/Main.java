@@ -1,6 +1,8 @@
 package com.dawood.releasepilot;
 
+import com.dawood.releasepilot.deployment.CreateDeploymentRequest;
 import com.dawood.releasepilot.deployment.DeploymentRepository;
+import com.dawood.releasepilot.deployment.DeploymentResponse;
 import com.dawood.releasepilot.deployment.DeploymentService;
 import com.dawood.releasepilot.deployment.InMemoryDeploymentRepository;
 
@@ -14,5 +16,16 @@ public class Main {
 
         // Create service and inject repository into it.
         DeploymentService service = new DeploymentService(repository);
+
+        // Create request DTO.
+        CreateDeploymentRequest request = new CreateDeploymentRequest(
+                "payment-service",
+                "v1.0.0"
+        );
+
+        // Create deployment.
+        DeploymentResponse createdDeployment = service.createDeployment(request);
+        System.out.println("Created:");
+        System.out.println(createdDeployment);
     }
 }
