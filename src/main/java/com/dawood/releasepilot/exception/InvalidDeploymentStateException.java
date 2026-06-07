@@ -1,11 +1,11 @@
 package com.dawood.releasepilot.exception;
 
-public class InvalidDeploymentException extends RuntimeException {
+public class InvalidDeploymentStateException extends RuntimeException {
 
     // Constructor receives an error message.
     // super(message) sends the message to RuntimeException.
 
-    public InvalidDeploymentException(String message) {
+    public InvalidDeploymentStateException(String message) {
         super(message);
     }
 }
