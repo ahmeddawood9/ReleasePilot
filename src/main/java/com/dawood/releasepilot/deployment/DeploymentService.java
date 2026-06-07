@@ -62,6 +62,44 @@ public class DeploymentService {
                 .toList();
     }
 
+    // Use case 4:
+    // Start deployment.
+    public DeploymentResponse startDeployment(Long id) {
+        Deployment deployment = findDeploymentOrThrow(id);
+
+        // Domain object checks if this transition is valid.
+        deployment.start();
+
+        // Save updated deployment.
+        Deployment savedDeployment = deploymentRepository.save(deployment);
+
+        return toResponse(savedDeployment);
+    }
+
+    // Use case 5:
+    // Mark deployment successful.
+    public DeploymentResponse markSuccessful(Long id) {
+        Deployment deployment = findDeploymentOrThrow(id);
+
+        deployment.markSuccessful();
+
+        Deployment savedDeployment = deploymentRepository.save(deployment);
+
+        return toResponse(savedDeployment);
+    }
+
+    // Use case 6:
+    // Mark deployment failed.
+    public DeploymentResponse markFailed(Long id) {
+        Deployment deployment = findDeploymentOrThrow(id);
+
+        deployment.markFailed();
+
+        Deployment savedDeployment = deploymentRepository.save(deployment);
+
+        return toResponse(savedDeployment);
+    }
+
     // Private helper method.
     // It avoids repeating findById + orElseThrow in every service method.
     private Deployment findDeploymentOrThrow(Long id) {
