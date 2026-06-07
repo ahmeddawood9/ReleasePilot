@@ -1,2 +1,15 @@
-*.class
+# Maven build output
 target/
+
+# Compiled Java files
+*.class
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
