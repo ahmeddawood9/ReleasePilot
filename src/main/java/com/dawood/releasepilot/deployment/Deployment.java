@@ -15,11 +15,11 @@ public class Deployment {
     public Deployment(Long id ,String serviceName,String version) {
 
         if(serviceName == null || serviceName.isBlank()) {
-            throw new IllegalArguementException("Service name is required");
+            throw new IllegalArgumentException("Service name is required");
         }
 
         if(version == null || version.isBlank()) {
-            throw new IllegalArguementException("version is required");
+            throw new IllegalArgumentException("version is required");
         }
 
         this.id = id;
@@ -35,8 +35,8 @@ public class Deployment {
     public void assignID(Long id ) {
 
         //making sure ID is not null
-        if(id == NULL) {
-            throw new IllegalArguementException("ID cannnot be null");
+        if(id == null) {
+            throw new IllegalArgumentException("ID cannnot be null");
         }
 
         //if ID is already assigned, do not allow chaning it 
@@ -53,7 +53,7 @@ public class Deployment {
         if(status != DeploymentStatus.PENDING) {
             throw new InvalidDeploymentStateException("Only PENDING deployment can be started. Current status: " + status);
         }
-        status = Deployment.RUNNING;
+        status = DeploymentStatus.RUNNING;
     }
 
     //only RUNNING deploymet can become SUCCESS.
