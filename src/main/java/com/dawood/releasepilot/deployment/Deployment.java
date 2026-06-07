@@ -32,7 +32,7 @@ public class Deployment {
 
 
     //repository will call this method when saving a new deployment.
-    public void assignID(Long id ) {
+    public void assignId(Long id ) {
 
         //making sure ID is not null
         if(id == null) {
