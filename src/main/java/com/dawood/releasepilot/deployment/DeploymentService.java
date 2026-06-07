@@ -1,5 +1,9 @@
 package com.dawood.releasepilot.deployment;
 
+import com.dawood.releasepilot.exception.DeploymentNotFoundException;
+
+import java.util.List;
+
 // Service layer = main backend logic layer.
 // It coordinates use cases.
 //
@@ -35,6 +39,38 @@ public class DeploymentService {
 
         // Convert internal domain object into response DTO.
         return toResponse(savedDeployment);
+    }
+
+    // Use case 2:
+    // Get one deployment by ID.
+    public DeploymentResponse getDeployment(Long id) {
+        Deployment deployment = findDeploymentOrThrow(id);
+
+        return toResponse(deployment);
+    }
+
+    // Use case 3:
+    // List all deployments.
+    public List<DeploymentResponse> listDeployments() {
+        // findAll() returns List<Deployment>
+        // stream() processes that list
+        // map(this::toResponse) converts Deployment -> DeploymentResponse
+        // toList() returns List<DeploymentResponse>
+        return deploymentRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // Private helper method.
+    // It avoids repeating findById + orElseThrow in every service method.
+    private Deployment findDeploymentOrThrow(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Deployment ID cannot be null");
+        }
+
+        return deploymentRepository.findById(id)
+                .orElseThrow(() -> new DeploymentNotFoundException(id));
     }
 
     // Private mapper method.
