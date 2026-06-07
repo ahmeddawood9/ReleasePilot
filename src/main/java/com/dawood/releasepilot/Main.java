@@ -27,5 +27,15 @@ public class Main {
         DeploymentResponse createdDeployment = service.createDeployment(request);
         System.out.println("Created:");
         System.out.println(createdDeployment);
+
+        // Start deployment.
+        DeploymentResponse runningDeployment = service.startDeployment(createdDeployment.id());
+        System.out.println("\nStarted:");
+        System.out.println(runningDeployment);
+
+        // Mark deployment successful.
+        DeploymentResponse successfulDeployment = service.markSuccessful(createdDeployment.id());
+        System.out.println("\nSuccessful:");
+        System.out.println(successfulDeployment);
     }
 }
