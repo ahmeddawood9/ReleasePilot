@@ -118,7 +118,10 @@ public class DeploymentService {
                 deployment.getId(),
                 deployment.getServiceName(),
                 deployment.getVersion(),
-                deployment.getStatus()
+                deployment.getStatus(),
+                deployment.getCreatedAt(),
+                deployment.getStartedAt(),
+                deployment.getCompletedAt()
         );
     }
 }
