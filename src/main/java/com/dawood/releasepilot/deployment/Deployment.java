@@ -1,8 +1,10 @@
-package com.dawood.releasepilot.deployment ;
-import com.dawood.releasepilot.exception.InvalidDeploymentStateException ;
+package com.dawood.releasepilot.deployment;
 
-// domain class = real buisness rules .
+import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 
+import java.time.Instant;
+
+// Domain class = real business object with rules.
 public class Deployment {
 
     private Long id;
@@ -10,66 +12,79 @@ public class Deployment {
     private String version;
     private DeploymentStatus status;
 
-    // ID can be null at first , becauase repository will assign it later.
+    // Instant represents a precise timestamp in UTC.
+    // Good for backend systems, logs, deployments, audit records.
+    private final Instant createdAt;
+    private Instant startedAt;
+    private Instant completedAt;
 
-    public Deployment(Long id ,String serviceName,String version) {
-
-        if(serviceName == null || serviceName.isBlank()) {
+    public Deployment(Long id, String serviceName, String version) {
+        if (serviceName == null || serviceName.isBlank()) {
             throw new IllegalArgumentException("Service name is required");
         }
 
-        if(version == null || version.isBlank()) {
-            throw new IllegalArgumentException("version is required");
+        if (version == null || version.isBlank()) {
+            throw new IllegalArgumentException("Version is required");
         }
 
         this.id = id;
         this.serviceName = serviceName;
         this.version = version;
+        this.status = DeploymentStatus.PENDING;
 
-        this.status = DeploymentStatus.PENDING; // every new deployment starts as PENDING
-
+        // When object is created, store creation time.
+        this.createdAt = Instant.now();
     }
 
-
-    //repository will call this method when saving a new deployment.
-    public void assignId(Long id ) {
-
-        //making sure ID is not null
-        if(id == null) {
-            throw new IllegalArgumentException("ID cannnot be null");
+    public void assignId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
         }
 
-        //if ID is already assigned, do not allow chaning it 
-        if(this.id != null) {
+        if (this.id != null) {
             throw new IllegalStateException("ID is already assigned");
         }
 
         this.id = id;
     }
 
-    //business rule : 
-    // Only PENDING deployment can start.
     public void start() {
-        if(status != DeploymentStatus.PENDING) {
-            throw new InvalidDeploymentStateException("Only PENDING deployment can be started. Current status: " + status);
+        if (status != DeploymentStatus.PENDING) {
+            throw new InvalidDeploymentStateException(
+                    "Only PENDING deployment can be started. Current status: " + status
+            );
         }
+
         status = DeploymentStatus.RUNNING;
+
+        // Store the time when deployment started.
+        startedAt = Instant.now();
     }
 
-    //only RUNNING deploymet can become SUCCESS.
     public void markSuccessful() {
-        if(status != DeploymentStatus.RUNNING) {
-            throw new InvalidDeploymentStateException( "Only RUNNING deployment can be marked successful. Current status: " + status);
+        if (status != DeploymentStatus.RUNNING) {
+            throw new InvalidDeploymentStateException(
+                    "Only RUNNING deployment can be marked successful. Current status: " + status
+            );
         }
+
         status = DeploymentStatus.SUCCESS;
+
+        // Store the time when deployment completed.
+        completedAt = Instant.now();
     }
 
-    //only running deployment can become failed
     public void markFailed() {
-        if(status != DeploymentStatus.RUNNING) {
-            throw new InvalidDeploymentStateException("Only RUNNING deployment can be marked failed. Current status: " + status);
+        if (status != DeploymentStatus.RUNNING) {
+            throw new InvalidDeploymentStateException(
+                    "Only RUNNING deployment can be marked failed. Current status: " + status
+            );
         }
+
         status = DeploymentStatus.FAILED;
+
+        // Store the time when deployment completed.
+        completedAt = Instant.now();
     }
 
     public Long getId() {
@@ -86,5 +101,17 @@ public class Deployment {
 
     public DeploymentStatus getStatus() {
         return status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
     }
 }
