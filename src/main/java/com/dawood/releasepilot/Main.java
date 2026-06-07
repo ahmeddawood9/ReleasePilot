@@ -6,6 +6,8 @@ import com.dawood.releasepilot.deployment.DeploymentResponse;
 import com.dawood.releasepilot.deployment.DeploymentService;
 import com.dawood.releasepilot.deployment.InMemoryDeploymentRepository;
 
+import java.util.List;
+
 // Main is only for manual testing right now.
 // Later, Spring Boot Controller will replace this manual flow.
 public class Main {
@@ -37,5 +39,10 @@ public class Main {
         DeploymentResponse successfulDeployment = service.markSuccessful(createdDeployment.id());
         System.out.println("\nSuccessful:");
         System.out.println(successfulDeployment);
+
+        // List all deployments.
+        List<DeploymentResponse> deployments = service.listDeployments();
+        System.out.println("\nAll deployments:");
+        deployments.forEach(System.out::println);
     }
 }
