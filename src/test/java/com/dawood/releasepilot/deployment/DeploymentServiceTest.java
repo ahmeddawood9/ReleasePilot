@@ -3,10 +3,19 @@ package com.dawood.releasepilot.deployment;
 import com.dawood.releasepilot.exception.DeploymentNotFoundException;
 import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 // This class tests DeploymentService.
 // We are testing backend behavior, not just syntax.
@@ -15,7 +24,28 @@ class DeploymentServiceTest {
     // Helper method to create a fresh service for every test.
     // Each test gets its own fake repository, so tests do not affect each other.
     private DeploymentService createService() {
-        DeploymentRepository repository = new InMemoryDeploymentRepository();
+        DeploymentRepository repository = mock(DeploymentRepository.class);
+        Map<Long, Deployment> deployments = new LinkedHashMap<>();
+        AtomicLong nextId = new AtomicLong(1);
+
+        when(repository.save(any(Deployment.class))).thenAnswer(invocation -> {
+            Deployment deployment = invocation.getArgument(0);
+
+            if (deployment.getId() == null) {
+                ReflectionTestUtils.setField(deployment, "id", nextId.getAndIncrement());
+            }
+
+            deployments.put(deployment.getId(), deployment);
+            return deployment;
+        });
+
+        when(repository.findById(anyLong())).thenAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            return Optional.ofNullable(deployments.get(id));
+        });
+
+        when(repository.findAll()).thenAnswer(invocation -> List.copyOf(deployments.values()));
+
         return new DeploymentService(repository);
     }
 
