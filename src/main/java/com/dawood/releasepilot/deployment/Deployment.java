@@ -1,24 +1,54 @@
 package com.dawood.releasepilot.deployment;
 
 import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 
-// Domain class = real business object with rules.
+// @Entity tells JPA:
+// This Java class should be stored in a database table.
+@Entity
+
+// Table name in PostgreSQL.
+@Table(name = "deployments")
 public class Deployment {
 
+    // @Id marks primary key.
+    // @GeneratedValue means database/JPA generates ID.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // nullable=false means this column cannot be null.
+    @Column(nullable = false)
     private String serviceName;
+
+    @Column(nullable = false)
     private String version;
+
+    // EnumType.STRING stores enum as readable text:
+    // PENDING, RUNNING, SUCCESS, FAILED
+    //
+    // Do not use ORDINAL for backend enums.
+    // ORDINAL stores 0,1,2,3 and becomes dangerous if enum order changes.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DeploymentStatus status;
 
-    // Instant represents a precise timestamp in UTC.
-    // Good for backend systems, logs, deployments, audit records.
-    private final Instant createdAt;
+    @Column(nullable = false)
+    private Instant createdAt;
+
     private Instant startedAt;
+
     private Instant completedAt;
 
-    public Deployment(Long id, String serviceName, String version) {
+    // JPA requires a no-argument constructor.
+    // protected means normal app code should not use it directly.
+    protected Deployment() {
+    }
+
+    // App code uses this constructor.
+    public Deployment(String serviceName, String version) {
         if (serviceName == null || serviceName.isBlank()) {
             throw new IllegalArgumentException("Service name is required");
         }
@@ -27,25 +57,10 @@ public class Deployment {
             throw new IllegalArgumentException("Version is required");
         }
 
-        this.id = id;
         this.serviceName = serviceName;
         this.version = version;
         this.status = DeploymentStatus.PENDING;
-
-        // When object is created, store creation time.
         this.createdAt = Instant.now();
-    }
-
-    public void assignId(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID cannot be null");
-        }
-
-        if (this.id != null) {
-            throw new IllegalStateException("ID is already assigned");
-        }
-
-        this.id = id;
     }
 
     public void start() {
@@ -56,8 +71,6 @@ public class Deployment {
         }
 
         status = DeploymentStatus.RUNNING;
-
-        // Store the time when deployment started.
         startedAt = Instant.now();
     }
 
@@ -69,8 +82,6 @@ public class Deployment {
         }
 
         status = DeploymentStatus.SUCCESS;
-
-        // Store the time when deployment completed.
         completedAt = Instant.now();
     }
 
@@ -82,8 +93,6 @@ public class Deployment {
         }
 
         status = DeploymentStatus.FAILED;
-
-        // Store the time when deployment completed.
         completedAt = Instant.now();
     }
 

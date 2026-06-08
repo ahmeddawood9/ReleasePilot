@@ -23,7 +23,6 @@ public class DeploymentService {
         }
 
         Deployment deployment = new Deployment(
-                null,
                 request.serviceName(),
                 request.version()
         );
