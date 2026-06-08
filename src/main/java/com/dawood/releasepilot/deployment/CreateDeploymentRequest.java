@@ -1,7 +1,18 @@
 package com.dawood.releasepilot.deployment;
 
-//record = simple immutable data carrier
-//this represents input data coming from our backend.
+import jakarta.validation.constraints.NotBlank;
 
+// Request DTO = input coming into API.
+//
+// @NotBlank means:
+// field cannot be null
+// field cannot be empty
+// field cannot be only spaces
+public record CreateDeploymentRequest(
+        @NotBlank(message = "Service name is required")
+        String serviceName,
 
-public record CreateDeploymentRequest (String serviceName,String version) {}
+        @NotBlank(message = "Version is required")
+        String version
+) {
+}
