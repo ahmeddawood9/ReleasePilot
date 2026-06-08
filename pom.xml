@@ -20,19 +20,25 @@
 
     <properties>
         <java.version>21</java.version>
-
-        <!-- JUnit version for testing -->
-        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencies>
-        <!-- JUnit 5 dependency.
-             scope=test means this library is only used for test code,
-             not for main application code. -->
+        <!-- Spring Web gives us REST APIs, embedded server, JSON handling -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Validation will be useful soon for request DTO validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Spring Boot test includes JUnit, assertions, and Spring testing tools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
