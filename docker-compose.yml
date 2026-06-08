@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: releasepilot-postgres
+    environment:
+      POSTGRES_DB: releasepilot
+      POSTGRES_USER: releasepilot
+      POSTGRES_PASSWORD: releasepilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - releasepilot_pg_data:/var/lib/postgresql/data
+
+volumes:
+  releasepilot_pg_data:
