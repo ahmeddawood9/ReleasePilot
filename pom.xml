@@ -4,14 +4,22 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Spring Boot parent gives us dependency/version management -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+        <relativePath/>
+    </parent>
+
     <groupId>com.dawood</groupId>
     <artifactId>releasepilot-lite</artifactId>
     <version>1.0.0</version>
+    <name>ReleasePilot Lite</name>
+    <description>Plain Java backend project migrated to Spring Boot</description>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
 
         <!-- JUnit version for testing -->
         <junit.version>5.10.2</junit.version>
