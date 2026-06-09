@@ -30,8 +30,11 @@ class DeploymentServiceTest {
     // Each test gets its own fake repository, so tests do not affect each other.
     private DeploymentService createService() {
         DeploymentRepository repository = mock(DeploymentRepository.class);
+        DeploymentEventRepository eventRepository = mock(DeploymentEventRepository.class);
         Map<Long, Deployment> deployments = new LinkedHashMap<>();
+        Map<Long, List<DeploymentEvent>> eventsByDeploymentId = new LinkedHashMap<>();
         AtomicLong nextId = new AtomicLong(1);
+        AtomicLong nextEventId = new AtomicLong(1);
 
         when(repository.save(any(Deployment.class))).thenAnswer(invocation -> {
             Deployment deployment = invocation.getArgument(0);
@@ -42,6 +45,26 @@ class DeploymentServiceTest {
 
             deployments.put(deployment.getId(), deployment);
             return deployment;
+        });
+
+        when(eventRepository.save(any(DeploymentEvent.class))).thenAnswer(invocation -> {
+            DeploymentEvent event = invocation.getArgument(0);
+
+            if (event.getId() == null) {
+                ReflectionTestUtils.setField(event, "id", nextEventId.getAndIncrement());
+            }
+
+            Long deploymentId = event.getDeployment().getId();
+            eventsByDeploymentId
+                    .computeIfAbsent(deploymentId, ignored -> new java.util.ArrayList<>())
+                    .add(event);
+
+            return event;
+        });
+
+        when(eventRepository.findByDeploymentIdOrderByOccurredAtAsc(anyLong())).thenAnswer(invocation -> {
+            Long deploymentId = invocation.getArgument(0);
+            return List.copyOf(eventsByDeploymentId.getOrDefault(deploymentId, List.of()));
         });
 
         when(repository.findById(anyLong())).thenAnswer(invocation -> {
@@ -110,7 +133,7 @@ class DeploymentServiceTest {
             return toPage(filteredDeployments, pageable);
         });
 
-        return new DeploymentService(repository);
+        return new DeploymentService(repository, eventRepository);
     }
 
     private Page<Deployment> toPage(List<Deployment> deployments, Pageable pageable) {
@@ -148,6 +171,51 @@ class DeploymentServiceTest {
         assertNotNull(response.createdAt());
         assertNull(response.startedAt());
         assertNull(response.completedAt());
+    }
+
+    @Test
+    void shouldRecordEventWhenDeploymentIsCreated() {
+        DeploymentService service = createService();
+
+        DeploymentResponse created = service.createDeployment(
+                new CreateDeploymentRequest(
+                        "payment-service",
+                        "v1.0.0",
+                        DeploymentEnvironment.DEV
+                )
+        );
+
+        List<DeploymentEventResponse> events = service.listDeploymentEvents(created.id());
+
+        assertEquals(1, events.size());
+        assertEquals(created.id(), events.getFirst().deploymentId());
+        assertEquals(DeploymentStatus.PENDING, events.getFirst().status());
+        assertEquals("Deployment created", events.getFirst().message());
+        assertNotNull(events.getFirst().occurredAt());
+        assertNotNull(events.getFirst().createdAt());
+    }
+
+    @Test
+    void shouldRecordDeploymentTimelineEvents() {
+        DeploymentService service = createService();
+
+        DeploymentResponse created = service.createDeployment(
+                new CreateDeploymentRequest(
+                        "payment-service",
+                        "v1.0.0",
+                        DeploymentEnvironment.DEV
+                )
+        );
+
+        service.startDeployment(created.id());
+        service.markSuccessful(created.id());
+
+        List<DeploymentEventResponse> events = service.listDeploymentEvents(created.id());
+
+        assertEquals(3, events.size());
+        assertEquals(DeploymentStatus.PENDING, events.get(0).status());
+        assertEquals(DeploymentStatus.RUNNING, events.get(1).status());
+        assertEquals(DeploymentStatus.SUCCESS, events.get(2).status());
     }
 
     @Test

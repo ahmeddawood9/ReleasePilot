@@ -6,6 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/deployments")
 public class DeploymentController {
@@ -47,6 +49,13 @@ public class DeploymentController {
     @GetMapping("/{id}")
     public ResponseEntity<DeploymentResponse> getDeployment(@PathVariable Long id) {
         DeploymentResponse response = deploymentService.getDeployment(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/events")
+    public ResponseEntity<List<DeploymentEventResponse>> listDeploymentEvents(@PathVariable Long id) {
+        List<DeploymentEventResponse> response = deploymentService.listDeploymentEvents(id);
 
         return ResponseEntity.ok(response);
     }

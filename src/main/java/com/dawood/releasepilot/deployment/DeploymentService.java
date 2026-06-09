@@ -15,10 +15,15 @@ import java.util.List;
 public class DeploymentService {
 
     private final DeploymentRepository deploymentRepository;
+    private final DeploymentEventRepository deploymentEventRepository;
 
     // Spring sees this constructor and automatically injects DeploymentRepository.
-    public DeploymentService(DeploymentRepository deploymentRepository) {
+    public DeploymentService(
+            DeploymentRepository deploymentRepository,
+            DeploymentEventRepository deploymentEventRepository
+    ) {
         this.deploymentRepository = deploymentRepository;
+        this.deploymentEventRepository = deploymentEventRepository;
     }
 
     @Transactional
@@ -48,6 +53,7 @@ public class DeploymentService {
         );
 
         Deployment savedDeployment = deploymentRepository.save(deployment);
+        recordEvent(savedDeployment, DeploymentStatus.PENDING, "Deployment created");
 
         return toResponse(savedDeployment);
     }
@@ -63,6 +69,16 @@ public class DeploymentService {
         return deploymentRepository.findAll()
                 .stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DeploymentEventResponse> listDeploymentEvents(Long deploymentId) {
+        findDeploymentOrThrow(deploymentId);
+
+        return deploymentEventRepository.findByDeploymentIdOrderByOccurredAtAsc(deploymentId)
+                .stream()
+                .map(this::toEventResponse)
                 .toList();
     }
 
@@ -102,6 +118,7 @@ public class DeploymentService {
         deployment.start();
 
         Deployment savedDeployment = deploymentRepository.save(deployment);
+        recordEvent(savedDeployment, DeploymentStatus.RUNNING, "Deployment started");
 
         return toResponse(savedDeployment);
     }
@@ -113,6 +130,7 @@ public class DeploymentService {
         deployment.markSuccessful();
 
         Deployment savedDeployment = deploymentRepository.save(deployment);
+        recordEvent(savedDeployment, DeploymentStatus.SUCCESS, "Deployment marked successful");
 
         return toResponse(savedDeployment);
     }
@@ -124,8 +142,15 @@ public class DeploymentService {
         deployment.markFailed();
 
         Deployment savedDeployment = deploymentRepository.save(deployment);
+        recordEvent(savedDeployment, DeploymentStatus.FAILED, "Deployment marked failed");
 
         return toResponse(savedDeployment);
+    }
+
+    private void recordEvent(Deployment deployment, DeploymentStatus status, String message) {
+        DeploymentEvent event = new DeploymentEvent(deployment, status, message);
+
+        deploymentEventRepository.save(event);
     }
 
     private Deployment findDeploymentOrThrow(Long id) {
@@ -147,6 +172,23 @@ public class DeploymentService {
                 deployment.getCreatedAt(),
                 deployment.getStartedAt(),
                 deployment.getCompletedAt()
+        );
+    }
+
+    private DeploymentEventResponse toEventResponse(DeploymentEvent event) {
+        return new DeploymentEventResponse(
+                event.getId(),
+                event.getDeployment().getId(),
+                event.getStatus(),
+                event.getMessage(),
+                event.getOccurredAt(),
+                event.getCreatedAt(),
+                event.getProvider(),
+                event.getExternalDeploymentId(),
+                event.getCommitSha(),
+                event.getBranchName(),
+                event.getTriggeredBy(),
+                event.getDeploymentUrl()
         );
     }
 }
