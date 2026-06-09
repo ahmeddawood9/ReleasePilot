@@ -10,7 +10,15 @@ import java.time.Instant;
 @Entity
 
 // Table name in PostgreSQL.
-@Table(name = "deployments")
+@Table(
+        name = "deployments",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_deployment_service_version",
+                        columnNames = {"service_name", "version"}
+                )
+        }
+)
 public class Deployment {
 
     // @Id marks primary key.
@@ -20,10 +28,10 @@ public class Deployment {
     private Long id;
 
     // nullable=false means this column cannot be null.
-    @Column(nullable = false)
+    @Column(name = "service_name", nullable = false)
     private String serviceName;
 
-    @Column(nullable = false)
+    @Column(name = "version", nullable = false)
     private String version;
 
     // EnumType.STRING stores enum as readable text:

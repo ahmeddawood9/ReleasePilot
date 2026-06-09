@@ -1,6 +1,7 @@
 package com.dawood.releasepilot.deployment;
 
 import com.dawood.releasepilot.exception.DeploymentNotFoundException;
+import com.dawood.releasepilot.exception.DuplicateDeploymentException;
 import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -44,6 +45,18 @@ class DeploymentServiceTest {
             return Optional.ofNullable(deployments.get(id));
         });
 
+        when(repository.existsByServiceNameAndVersion(any(), any())).thenAnswer(invocation -> {
+            String serviceName = invocation.getArgument(0);
+            String version = invocation.getArgument(1);
+
+            return deployments.values()
+                    .stream()
+                    .anyMatch(deployment ->
+                            deployment.getServiceName().equals(serviceName)
+                                    && deployment.getVersion().equals(version)
+                    );
+        });
+
         when(repository.findAll()).thenAnswer(invocation -> List.copyOf(deployments.values()));
 
         return new DeploymentService(repository);
@@ -84,6 +97,22 @@ class DeploymentServiceTest {
         List<DeploymentResponse> deployments = service.listDeployments();
 
         assertEquals(2, deployments.size());
+    }
+
+    @Test
+    void shouldRejectDuplicateDeployment() {
+        DeploymentService service = createService();
+
+        service.createDeployment(
+                new CreateDeploymentRequest("payment-service", "v1.0.0")
+        );
+
+        assertThrows(
+                DuplicateDeploymentException.class,
+                () -> service.createDeployment(
+                        new CreateDeploymentRequest("payment-service", "v1.0.0")
+                )
+        );
     }
 
     @Test
