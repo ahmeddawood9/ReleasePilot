@@ -1,6 +1,7 @@
 package com.dawood.releasepilot.deployment;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 // Request DTO = input coming into API.
 //
@@ -13,6 +14,9 @@ public record CreateDeploymentRequest(
         String serviceName,
 
         @NotBlank(message = "Version is required")
-        String version
+        String version,
+
+        @NotNull(message = "Environment is required")
+        DeploymentEnvironment environment
 ) {
 }

@@ -15,7 +15,7 @@ import java.time.Instant;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_deployment_service_version",
-                        columnNames = {"service_name", "version"}
+                        columnNames = {"service_name", "version", "environment"}
                 )
         }
 )
@@ -33,6 +33,10 @@ public class Deployment {
 
     @Column(name = "version", nullable = false)
     private String version;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "environment", nullable = false, columnDefinition = "varchar(255) default 'DEV'")
+    private DeploymentEnvironment environment;
 
     // EnumType.STRING stores enum as readable text:
     // PENDING, RUNNING, SUCCESS, FAILED
@@ -56,7 +60,7 @@ public class Deployment {
     }
 
     // App code uses this constructor.
-    public Deployment(String serviceName, String version) {
+    public Deployment(String serviceName, String version, DeploymentEnvironment environment) {
         if (serviceName == null || serviceName.isBlank()) {
             throw new IllegalArgumentException("Service name is required");
         }
@@ -65,8 +69,13 @@ public class Deployment {
             throw new IllegalArgumentException("Version is required");
         }
 
+        if (environment == null) {
+            throw new IllegalArgumentException("Environment is required");
+        }
+
         this.serviceName = serviceName;
         this.version = version;
+        this.environment = environment;
         this.status = DeploymentStatus.PENDING;
         this.createdAt = Instant.now();
     }
@@ -114,6 +123,10 @@ public class Deployment {
 
     public String getVersion() {
         return version;
+    }
+
+    public DeploymentEnvironment getEnvironment() {
+        return environment;
     }
 
     public DeploymentStatus getStatus() {

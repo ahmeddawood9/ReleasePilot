@@ -7,6 +7,7 @@ public record DeploymentResponse(
         Long id,
         String serviceName,
         String version,
+        DeploymentEnvironment environment,
         DeploymentStatus status,
         Instant createdAt,
         Instant startedAt,
