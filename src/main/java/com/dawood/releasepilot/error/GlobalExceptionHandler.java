@@ -1,6 +1,7 @@
 package com.dawood.releasepilot.error;
 
 import com.dawood.releasepilot.exception.DeploymentNotFoundException;
+import com.dawood.releasepilot.exception.DuplicateDeploymentException;
 import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    @ExceptionHandler(DuplicateDeploymentException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateDeployment(
+            DuplicateDeploymentException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(response);
     }
 
