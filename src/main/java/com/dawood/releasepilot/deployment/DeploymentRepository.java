@@ -21,4 +21,8 @@ public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
             DeploymentEnvironment environment,
             Pageable pageable
     );
+
+    long countByStatus(DeploymentStatus status);
+
+    long countByEnvironment(DeploymentEnvironment environment);
 }
