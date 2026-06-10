@@ -66,6 +66,9 @@ Controller:
 Handles HTTP routes, request bodies, query parameters, path variables, and HTTP
 status codes.
 
+Interceptor:
+Handles cross-cutting request checks before controller methods run.
+
 Service:
 Contains business logic and transaction boundaries.
 
@@ -279,6 +282,35 @@ src/main/resources/application.properties
 
 Property:
 releasepilot.integrations.ingestion-token=local-dev-token
+
+Security is handled before the controller by a Spring MVC HandlerInterceptor.
+
+Files:
+- src/main/java/com/dawood/releasepilot/config/IntegrationTokenInterceptor.java
+- src/main/java/com/dawood/releasepilot/config/IntegrationSecurityConfig.java
+
+IntegrationTokenInterceptor implements HandlerInterceptor.
+Its preHandle method runs before protected controller methods.
+
+Technical flow:
+1. Request comes in for /api/integrations/**
+2. Spring runs IntegrationTokenInterceptor.preHandle(...)
+3. The interceptor reads X-ReleasePilot-Token
+4. It compares the header with releasepilot.integrations.ingestion-token
+5. If token is invalid or missing, it throws InvalidIntegrationTokenException
+6. GlobalExceptionHandler converts that exception to 401 Unauthorized
+7. If token is valid, preHandle returns true
+8. The controller method is allowed to execute
+
+The interceptor is registered in IntegrationSecurityConfig:
+registry.addInterceptor(integrationTokenInterceptor)
+        .addPathPatterns("/api/integrations/**");
+
+Why this is better than checking inside the controller:
+- token security is a cross-cutting concern
+- controller stays focused on HTTP request/response handling
+- future integration endpoints are protected automatically
+- no repeated token-check if blocks in every controller method
 
 Missing or wrong token returns:
 401 Unauthorized
