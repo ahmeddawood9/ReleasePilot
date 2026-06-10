@@ -2,6 +2,7 @@ package com.dawood.releasepilot.error;
 
 import com.dawood.releasepilot.exception.DeploymentNotFoundException;
 import com.dawood.releasepilot.exception.DuplicateDeploymentException;
+import com.dawood.releasepilot.exception.InvalidIntegrationTokenException;
 import com.dawood.releasepilot.exception.InvalidDeploymentStateException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
+    @ExceptionHandler(InvalidIntegrationTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidIntegrationToken(
+            InvalidIntegrationTokenException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
 
