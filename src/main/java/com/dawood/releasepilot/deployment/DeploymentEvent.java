@@ -5,7 +5,15 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "deployment_events")
+@Table(
+        name = "deployment_events",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_deployment_event_external",
+                        columnNames = {"provider", "external_deployment_id", "status"}
+                )
+        }
+)
 public class DeploymentEvent {
 
     @Id

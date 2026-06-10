@@ -32,6 +32,19 @@ public class DeploymentEventIngestionService {
         Deployment deployment = deploymentRepository.findById(request.deploymentId())
                 .orElseThrow(() -> new DeploymentNotFoundException(request.deploymentId()));
 
+        return deploymentEventRepository.findByProviderAndExternalDeploymentIdAndStatus(
+                        request.provider(),
+                        request.externalDeploymentId(),
+                        request.status()
+                )
+                .map(this::toResponse)
+                .orElseGet(() -> createDeploymentEvent(deployment, request));
+    }
+
+    private DeploymentEventResponse createDeploymentEvent(
+            Deployment deployment,
+            IngestDeploymentEventRequest request
+    ) {
         DeploymentEvent event = new DeploymentEvent(
                 deployment,
                 request.status(),

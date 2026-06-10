@@ -21,6 +21,11 @@ class DeploymentEventIngestionServiceTest {
         AtomicLong nextEventId = new AtomicLong(1);
 
         when(deploymentRepository.findById(deployment.getId())).thenReturn(Optional.of(deployment));
+        when(deploymentEventRepository.findByProviderAndExternalDeploymentIdAndStatus(
+                any(),
+                any(),
+                any()
+        )).thenReturn(Optional.empty());
 
         when(deploymentEventRepository.save(any(DeploymentEvent.class))).thenAnswer(invocation -> {
             DeploymentEvent event = invocation.getArgument(0);
@@ -33,6 +38,60 @@ class DeploymentEventIngestionServiceTest {
         });
 
         return new DeploymentEventIngestionService(deploymentRepository, deploymentEventRepository);
+    }
+
+    @Test
+    void shouldReturnExistingEventWhenExternalEventIsIngestedAgain() {
+        Deployment deployment = new Deployment(
+                "payment-service",
+                "v1.0.0",
+                DeploymentEnvironment.DEV
+        );
+        ReflectionTestUtils.setField(deployment, "id", 1L);
+
+        DeploymentRepository deploymentRepository = mock(DeploymentRepository.class);
+        DeploymentEventRepository deploymentEventRepository = mock(DeploymentEventRepository.class);
+        DeploymentEvent existingEvent = new DeploymentEvent(
+                deployment,
+                DeploymentStatus.RUNNING,
+                "GitHub Actions deployment started",
+                "GITHUB_ACTIONS",
+                "gha-123",
+                "abc123",
+                "main",
+                "dawood",
+                "https://github.com/example/actions/runs/123"
+        );
+        ReflectionTestUtils.setField(existingEvent, "id", 99L);
+
+        when(deploymentRepository.findById(1L)).thenReturn(Optional.of(deployment));
+        when(deploymentEventRepository.findByProviderAndExternalDeploymentIdAndStatus(
+                "GITHUB_ACTIONS",
+                "gha-123",
+                DeploymentStatus.RUNNING
+        )).thenReturn(Optional.of(existingEvent));
+
+        DeploymentEventIngestionService service = new DeploymentEventIngestionService(
+                deploymentRepository,
+                deploymentEventRepository
+        );
+
+        DeploymentEventResponse response = service.ingestDeploymentEvent(
+                new IngestDeploymentEventRequest(
+                        1L,
+                        DeploymentStatus.RUNNING,
+                        "GitHub Actions deployment started",
+                        "GITHUB_ACTIONS",
+                        "gha-123",
+                        "abc123",
+                        "main",
+                        "dawood",
+                        "https://github.com/example/actions/runs/123"
+                )
+        );
+
+        assertEquals(99L, response.id());
+        assertEquals("gha-123", response.externalDeploymentId());
     }
 
     @Test
