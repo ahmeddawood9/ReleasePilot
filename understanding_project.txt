@@ -1,0 +1,483 @@
+ReleasePilotLite Project Understanding
+======================================
+
+Purpose
+-------
+ReleasePilotLite is a learning-focused Spring Boot backend project.
+
+It models a deployment tracking system. The backend can create deployments,
+move them through statuses, keep a deployment timeline, expose dashboard
+summary data, and receive external CI/CD deployment events.
+
+The project is useful for learning these backend concepts:
+- REST APIs
+- layered architecture
+- DTOs
+- service layer business logic
+- repositories
+- JPA entities
+- PostgreSQL persistence
+- custom exceptions
+- global error handling
+- transactions
+- validation
+- pagination
+- idempotency
+- CORS
+- OpenAPI/Swagger documentation
+
+
+Tech Stack
+----------
+Backend:
+- Java 21
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
+- Maven
+- JUnit 5
+- Mockito
+- Docker Compose
+- springdoc-openapi / Swagger UI
+
+Database:
+- PostgreSQL running locally with Docker Compose.
+
+Run app:
+mvn spring-boot:run
+
+Run tests:
+mvn test
+
+
+Architecture
+------------
+The app uses a common backend structure:
+
+HTTP Request
+  -> Controller
+  -> Service
+  -> Repository
+  -> PostgreSQL
+
+Controller:
+Handles HTTP routes, request bodies, query parameters, path variables, and HTTP
+status codes.
+
+Service:
+Contains business logic and transaction boundaries.
+
+Repository:
+Talks to the database through Spring Data JPA.
+
+Entity:
+Represents database tables.
+
+DTO:
+Represents API request and response shapes.
+
+
+Main Package
+------------
+Root package:
+com.dawood.releasepilot
+
+Important packages:
+- deployment
+- integration
+- dashboard
+- error
+- exception
+- config
+- docs
+- health
+
+
+Application Entry Point
+-----------------------
+File:
+src/main/java/com/dawood/releasepilot/ReleasePilotApplication.java
+
+This has @SpringBootApplication.
+
+It starts:
+- Spring context
+- embedded Tomcat
+- controller scanning
+- service scanning
+- repository scanning
+- auto-configuration
+
+
+Deployment Domain
+-----------------
+Main entity:
+src/main/java/com/dawood/releasepilot/deployment/Deployment.java
+
+Fields:
+- id
+- serviceName
+- version
+- environment
+- status
+- createdAt
+- startedAt
+- completedAt
+
+Environment enum:
+src/main/java/com/dawood/releasepilot/deployment/DeploymentEnvironment.java
+
+Values:
+- DEV
+- STAGING
+- PRODUCTION
+
+Status enum:
+src/main/java/com/dawood/releasepilot/deployment/DeploymentStatus.java
+
+Values:
+- PENDING
+- RUNNING
+- SUCCESS
+- FAILED
+
+Status flow:
+PENDING -> RUNNING -> SUCCESS
+PENDING -> RUNNING -> FAILED
+
+Invalid flows are rejected.
+
+
+Deployment Uniqueness
+---------------------
+A deployment is unique by:
+- serviceName
+- version
+- environment
+
+This is allowed:
+payment-service + v1.0.0 + DEV
+payment-service + v1.0.0 + STAGING
+
+This is rejected:
+payment-service + v1.0.0 + DEV
+payment-service + v1.0.0 + DEV
+
+The service checks duplicates before saving.
+The database also has a unique constraint.
+
+
+Deployment API
+--------------
+Controller:
+src/main/java/com/dawood/releasepilot/deployment/DeploymentController.java
+
+Endpoints:
+POST /api/deployments
+GET /api/deployments
+GET /api/deployments/{id}
+GET /api/deployments/{id}/events
+PATCH /api/deployments/{id}/start
+PATCH /api/deployments/{id}/success
+PATCH /api/deployments/{id}/fail
+
+POST returns 201 Created.
+GET and PATCH return 200 OK.
+
+ResponseEntity is used so the controller controls HTTP status codes explicitly.
+
+
+Filtering and Pagination
+------------------------
+GET /api/deployments supports:
+
+GET /api/deployments?status=RUNNING
+GET /api/deployments?environment=PRODUCTION
+GET /api/deployments?page=0&size=10
+
+The controller builds a PageRequest.
+The service decides which repository query to use.
+The repository returns a Spring Data Page.
+
+
+Deployment Timeline
+-------------------
+Entity:
+src/main/java/com/dawood/releasepilot/deployment/DeploymentEvent.java
+
+Table:
+deployment_events
+
+Fields:
+- id
+- deployment_id
+- status
+- message
+- occurred_at
+- created_at
+- provider
+- external_deployment_id
+- commit_sha
+- branch_name
+- triggered_by
+- deployment_url
+
+The first six fields are core event timeline fields.
+The provider/external fields are for future CI/CD integrations.
+
+Relationship:
+One Deployment has many DeploymentEvents.
+
+Deployment = current state.
+DeploymentEvent = history of what happened.
+
+Example:
+Deployment 1 current status is SUCCESS.
+Events:
+1. PENDING - Deployment created
+2. RUNNING - Deployment started
+3. SUCCESS - Deployment marked successful
+
+
+CI/CD Ingestion
+---------------
+Package:
+src/main/java/com/dawood/releasepilot/integration
+
+Endpoint:
+POST /api/integrations/deployment-events
+
+Purpose:
+This receives external events from systems like GitHub Actions, GitLab, or
+Jenkins later.
+
+Request fields:
+- deploymentId
+- status
+- message
+- provider
+- externalDeploymentId
+- commitSha
+- branchName
+- triggeredBy
+- deploymentUrl
+
+Important:
+The ingestion endpoint does not create a deployment.
+It attaches an external event to an existing deployment timeline.
+
+
+Ingestion Security
+------------------
+The ingestion endpoint requires this header:
+X-ReleasePilot-Token: local-dev-token
+
+Configured in:
+src/main/resources/application.properties
+
+Property:
+releasepilot.integrations.ingestion-token=local-dev-token
+
+Missing or wrong token returns:
+401 Unauthorized
+
+
+Idempotency
+-----------
+External CI/CD systems often retry requests.
+So the same event may arrive more than once.
+
+The app treats an external event as unique by:
+- provider
+- externalDeploymentId
+- status
+
+If the same event is sent twice, the app returns the existing event instead of
+creating a duplicate row.
+
+This is implemented in:
+DeploymentEventIngestionService
+
+Database safety is implemented with a unique constraint on:
+provider + external_deployment_id + status
+
+
+Dashboard Summary
+-----------------
+Package:
+src/main/java/com/dawood/releasepilot/dashboard
+
+Endpoint:
+GET /api/dashboard/summary
+
+Returns:
+- totalDeployments
+- pendingDeployments
+- runningDeployments
+- successfulDeployments
+- failedDeployments
+- devDeployments
+- stagingDeployments
+- productionDeployments
+
+This is useful for frontend dashboard cards.
+
+
+Error Handling
+--------------
+Global handler:
+src/main/java/com/dawood/releasepilot/error/GlobalExceptionHandler.java
+
+It maps exceptions to HTTP responses:
+- DeploymentNotFoundException -> 404
+- DuplicateDeploymentException -> 409
+- InvalidDeploymentStateException -> 409
+- InvalidIntegrationTokenException -> 401
+- IllegalArgumentException -> 400
+- validation errors -> 400
+
+Error response shape:
+ApiErrorResponse
+
+Fields:
+- timestamp
+- status
+- error
+- message
+- path
+
+
+CORS
+----
+File:
+src/main/java/com/dawood/releasepilot/config/CorsConfig.java
+
+Allows browser frontends from:
+- http://localhost:3000
+- http://localhost:5173
+
+For paths:
+/api/**
+
+This matters for frontend apps. Browsers enforce CORS. curl does not.
+
+
+OpenAPI / Swagger
+-----------------
+Config:
+src/main/java/com/dawood/releasepilot/docs/OpenApiConfig.java
+
+Dependency:
+springdoc-openapi-starter-webmvc-ui
+
+When app is running:
+http://localhost:8080/swagger-ui.html
+http://localhost:8080/v3/api-docs
+
+Swagger documents the API from controller mappings.
+
+
+Database
+--------
+Config file:
+src/main/resources/application.properties
+
+Important properties:
+spring.datasource.url=jdbc:postgresql://localhost:5432/releasepilot
+spring.datasource.username=releasepilot
+spring.datasource.password=releasepilot
+spring.jpa.hibernate.ddl-auto=update
+releasepilot.integrations.ingestion-token=local-dev-token
+
+Docker Compose:
+docker-compose.yml
+
+Start database:
+docker compose up -d
+
+Clear local learning data:
+TRUNCATE TABLE deployment_events, deployments RESTART IDENTITY CASCADE;
+
+
+Manual API Examples
+-------------------
+Create deployment:
+curl -X POST http://localhost:8080/api/deployments \
+  -H "Content-Type: application/json" \
+  -d '{"serviceName":"payment-service","version":"v1.0.0","environment":"DEV"}'
+
+Start deployment:
+curl -X PATCH http://localhost:8080/api/deployments/1/start
+
+Mark successful:
+curl -X PATCH http://localhost:8080/api/deployments/1/success
+
+Get timeline:
+curl http://localhost:8080/api/deployments/1/events
+
+Dashboard summary:
+curl http://localhost:8080/api/dashboard/summary
+
+Ingest external event:
+curl -X POST http://localhost:8080/api/integrations/deployment-events \
+  -H "Content-Type: application/json" \
+  -H "X-ReleasePilot-Token: local-dev-token" \
+  -d '{
+    "deploymentId": 1,
+    "status": "RUNNING",
+    "message": "GitHub Actions deployment started",
+    "provider": "GITHUB_ACTIONS",
+    "externalDeploymentId": "gha-123",
+    "commitSha": "abc123",
+    "branchName": "main",
+    "triggeredBy": "dawood",
+    "deploymentUrl": "https://github.com/example/actions/runs/123"
+  }'
+
+
+Testing
+-------
+Test packages:
+src/test/java/com/dawood/releasepilot
+
+Important tests:
+- DeploymentServiceTest
+- DeploymentEventIngestionServiceTest
+- DashboardServiceTest
+
+Current tested behaviors:
+- create deployment
+- duplicate rejection
+- state transitions
+- invalid state transitions
+- filtering
+- pagination
+- timeline recording
+- event ingestion
+- idempotency
+- dashboard summary
+
+Latest known result:
+mvn test
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+
+
+Current Project Summary
+-----------------------
+ReleasePilotLite is now a small deployment tracking backend.
+
+It supports:
+- deployment lifecycle management
+- environment-aware uniqueness
+- timeline events
+- external CI/CD event ingestion
+- token protection for ingestion
+- idempotent external events
+- dashboard summary counts
+- filtering and pagination
+- CORS for frontend development
+- Swagger/OpenAPI docs
+- PostgreSQL persistence
+- unit tests
