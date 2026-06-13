@@ -24,13 +24,21 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/releasepilot
       SPRING_DATASOURCE_USERNAME: releasepilot
       SPRING_DATASOURCE_PASSWORD: releasepilot
       RELEASEPILOT_INGESTION_TOKEN: local-dev-token
+      FRONTEND_ORIGIN: http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   frontend:
     build:
@@ -44,7 +52,14 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/dashboard >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
 volumes:
   releasepilot_pg_data:
