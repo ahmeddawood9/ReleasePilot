@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+releasepilot:
+  integrations:
+    ingestion-token: ${RELEASEPILOT_INGESTION_TOKEN}
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN}

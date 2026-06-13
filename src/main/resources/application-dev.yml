@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/releasepilot}
+    username: ${SPRING_DATASOURCE_USERNAME:releasepilot}
+    password: ${SPRING_DATASOURCE_PASSWORD:releasepilot}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: ${SPRING_JPA_FORMAT_SQL:false}
+
+releasepilot:
+  integrations:
+    ingestion-token: ${RELEASEPILOT_INGESTION_TOKEN:local-dev-token}
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:3000,http://localhost:5173}
