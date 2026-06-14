@@ -291,6 +291,42 @@ class DeploymentServiceTest {
     }
 
     @Test
+    void shouldSearchDeploymentsByStatusAndEnvironmentTogether() {
+        DeploymentService service = createService();
+
+        DeploymentResponse runningDevDeployment = service.createDeployment(new CreateDeploymentRequest(
+                "payment-service",
+                "v1.0.0",
+                DeploymentEnvironment.DEV
+        ));
+        service.startDeployment(runningDevDeployment.id());
+
+        DeploymentResponse runningProductionDeployment = service.createDeployment(new CreateDeploymentRequest(
+                "billing-service",
+                "v1.0.0",
+                DeploymentEnvironment.PRODUCTION
+        ));
+        service.startDeployment(runningProductionDeployment.id());
+
+        service.createDeployment(new CreateDeploymentRequest(
+                "user-service",
+                "v2.0.0",
+                DeploymentEnvironment.PRODUCTION
+        ));
+
+        Page<DeploymentResponse> deployments = service.searchDeployments(
+                DeploymentStatus.RUNNING,
+                DeploymentEnvironment.PRODUCTION,
+                PageRequest.of(0, 10)
+        );
+
+        assertEquals(1, deployments.getTotalElements());
+        assertEquals("billing-service", deployments.getContent().getFirst().serviceName());
+        assertEquals(DeploymentStatus.RUNNING, deployments.getContent().getFirst().status());
+        assertEquals(DeploymentEnvironment.PRODUCTION, deployments.getContent().getFirst().environment());
+    }
+
+    @Test
     void shouldPaginateDeployments() {
         DeploymentService service = createService();
 
