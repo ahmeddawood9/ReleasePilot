@@ -4,6 +4,20 @@ ReleasePilotLite is a Spring Boot and Next.js deployment tracking dashboard for 
 
 It models how teams track releases across environments, collect deployment timeline events, and prepare a service for containerized deployment.
 
+## Why This Project Exists
+
+ReleasePilotLite is built as a learning project that mirrors the shape of a real backend product without adding unnecessary enterprise complexity too early.
+
+The goal is to practice:
+
+- REST API design with clear request and response contracts
+- service-layer business rules
+- persistence with PostgreSQL and JPA
+- schema ownership with Flyway migrations
+- frontend data fetching with typed API clients
+- local production-like runtime with Docker Compose
+- deployment readiness patterns such as health checks, profiles, and environment variables
+
 ## Problem Statement
 
 Small teams often deploy from CI/CD tools but lack a simple place to see what was deployed, where it was deployed, who triggered it, and how the deployment state changed over time.
@@ -107,6 +121,12 @@ Health:
 ```text
 GET /actuator/health
 ```
+
+More detailed API notes:
+
+- [Dashboard summary contract](docs/dashboard-summary.md)
+- [CI/CD ingestion API](docs/ci-cd-ingestion.md)
+- [Environment configuration](docs/configuration.md)
 
 ## CI/CD Ingestion
 
@@ -222,6 +242,21 @@ Screenshots will be added after final UI capture.
 - Deployments list screenshot
 - Deployment detail/timeline screenshot
 - Integrations page screenshot
+
+## Roadmap
+
+Near-term improvements:
+
+- capture final UI screenshots for the README
+- prepare production deployment notes for an AWS-style environment
+- add CI checks for backend tests and frontend build
+- document a GitHub Actions ingestion example
+
+Later improvements:
+
+- move local demo secrets to managed secret storage in deployment environments
+- add role-based authentication only after the public MVP is stable
+- add richer deployment analytics after the core tracking flow is deployed
 
 ## Git Hygiene
 
