@@ -1,3 +1,5 @@
+name: releasepilot
+
 services:
   backend:
     build:
