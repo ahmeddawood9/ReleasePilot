@@ -12,7 +12,7 @@ public class OpenApiConfig {
     public OpenAPI releasePilotOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("ReleasePilot Lite API")
+                        .title("ReleasePilot API")
                         .version("1.0.0")
                         .description("Deployment tracking API for learning Java and Spring Boot backend development"));
     }

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: releasepilot-lite
+    name: releasepilot
   profiles:
     default: dev
 

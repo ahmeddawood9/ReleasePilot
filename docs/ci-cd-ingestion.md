@@ -1,8 +1,8 @@
 # CI/CD Deployment Event Ingestion
 
-ReleasePilotLite can receive deployment events from external CI/CD systems such as GitHub Actions, GitLab, Jenkins, or any custom release job.
+ReleasePilot can receive deployment events from external CI/CD systems such as GitHub Actions, GitLab, Jenkins, or any custom release job.
 
-The ingestion endpoint appends an event to an existing deployment timeline. It does not create deployments automatically. A deployment must already exist in ReleasePilotLite before an external event can be attached to it.
+The ingestion endpoint appends an event to an existing deployment timeline. It does not create deployments automatically. A deployment must already exist in ReleasePilot before an external event can be attached to it.
 
 ## Endpoint
 
@@ -44,7 +44,7 @@ The local token is only a development/demo value. Production deployments should 
 
 | Field | Meaning |
 | --- | --- |
-| `deploymentId` | Existing ReleasePilotLite deployment ID that receives the event. |
+| `deploymentId` | Existing ReleasePilot deployment ID that receives the event. |
 | `status` | Deployment status represented by the event: `PENDING`, `RUNNING`, `SUCCESS`, or `FAILED`. |
 | `message` | Human-readable event message shown in the deployment timeline. |
 | `provider` | External system name, for example `GITHUB_ACTIONS`, `GITLAB`, or `JENKINS`. |
@@ -58,13 +58,13 @@ The local token is only a development/demo value. Production deployments should 
 
 CI/CD systems often retry failed HTTP calls. Without idempotency, the same external deployment event could appear multiple times in the timeline.
 
-ReleasePilotLite treats this combination as the idempotency key:
+ReleasePilot treats this combination as the idempotency key:
 
 ```text
 provider + externalDeploymentId + status
 ```
 
-If the same provider sends the same external deployment ID with the same status again, ReleasePilotLite returns the existing timeline event instead of creating a duplicate.
+If the same provider sends the same external deployment ID with the same status again, ReleasePilot returns the existing timeline event instead of creating a duplicate.
 
 ## Curl Example
 

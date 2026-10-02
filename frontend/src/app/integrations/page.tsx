@@ -82,7 +82,7 @@ export default function IntegrationsPage() {
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
             Integrations let external CI/CD systems send deployment events into
-            ReleasePilotLite. Those events are attached to an existing
+            ReleasePilot. Those events are attached to an existing
             deployment timeline, so the app can track what happened after a
             deployment was created. This page is documentation only; it does
             not send ingestion requests from the browser.
@@ -180,7 +180,7 @@ export default function IntegrationsPage() {
               Idempotency
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              CI/CD tools sometimes retry web requests. ReleasePilotLite uses
+              CI/CD tools sometimes retry web requests. ReleasePilot uses
               provider, externalDeploymentId, and status to recognize the same
               external event. If the same event is sent again, the API returns
               the existing event instead of creating a duplicate timeline row.
@@ -194,7 +194,7 @@ export default function IntegrationsPage() {
             <p className="mt-2 text-sm leading-6 text-slate-600">
               The next step is to add a GitHub Actions workflow example that
               calls this ingestion endpoint during deployment jobs. That will
-              connect real CI/CD runs to ReleasePilotLite timelines.
+              connect real CI/CD runs to ReleasePilot timelines.
             </p>
           </div>
         </section>

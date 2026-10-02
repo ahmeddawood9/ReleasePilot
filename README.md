@@ -1,12 +1,12 @@
-# ReleasePilotLite
+# ReleasePilot
 
-ReleasePilotLite is a Spring Boot and Next.js deployment tracking dashboard for learning production-style backend and frontend architecture.
+ReleasePilot is a Spring Boot and Next.js deployment tracking dashboard for learning production-style backend and frontend architecture.
 
 It models how teams track releases across environments, collect deployment timeline events, and prepare a service for containerized deployment.
 
 ## Why This Project Exists
 
-ReleasePilotLite is built as a learning project that mirrors the shape of a real backend product without adding unnecessary enterprise complexity too early.
+ReleasePilot is built as a learning project that mirrors the shape of a real backend product without adding unnecessary enterprise complexity too early.
 
 The goal is to practice:
 
@@ -22,7 +22,7 @@ The goal is to practice:
 
 Small teams often deploy from CI/CD tools but lack a simple place to see what was deployed, where it was deployed, who triggered it, and how the deployment state changed over time.
 
-ReleasePilotLite solves that learning problem with a focused deployment tracking system:
+ReleasePilot solves that learning problem with a focused deployment tracking system:
 
 - create and track deployments
 - move deployments through a controlled lifecycle
@@ -130,7 +130,7 @@ More detailed API notes:
 
 ## CI/CD Ingestion
 
-ReleasePilotLite can receive external deployment events from CI/CD systems such as GitHub Actions, GitLab, or Jenkins.
+ReleasePilot can receive external deployment events from CI/CD systems such as GitHub Actions, GitLab, or Jenkins.
 
 The ingestion API attaches an event to an existing deployment timeline. It does not create deployments automatically.
 
@@ -140,7 +140,7 @@ Idempotency is handled by:
 provider + externalDeploymentId + status
 ```
 
-If the same CI/CD system retries the same event, ReleasePilotLite returns the existing event instead of creating a duplicate.
+If the same CI/CD system retries the same event, ReleasePilot returns the existing event instead of creating a duplicate.
 
 ## Local Development Setup
 

@@ -1,6 +1,6 @@
 # Environment Configuration
 
-ReleasePilotLite is configured through environment variables so the same code can run locally, in Docker Compose, and later in a production-style deployment.
+ReleasePilot is configured through environment variables so the same code can run locally, in Docker Compose, and later in a production-style deployment.
 
 Do not commit real secrets. Use `.env.example` files for safe local placeholders only.
 
