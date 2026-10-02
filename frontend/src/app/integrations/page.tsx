@@ -14,17 +14,17 @@ const requestFields = [
   },
   {
     name: "message",
-    required: "Optional",
+    required: "Required",
     description: "Human-readable event text shown in the deployment timeline.",
   },
   {
     name: "provider",
-    required: "Optional",
+    required: "Required",
     description: "The external system name, such as GITHUB_ACTIONS or JENKINS.",
   },
   {
     name: "externalDeploymentId",
-    required: "Optional",
+    required: "Required",
     description: "The provider-side event or run id used for idempotency.",
   },
   {
