@@ -1,125 +1,340 @@
-ReleasePilotLite Project Understanding
-======================================
+ReleasePilotLite - Complete Current Project State
+================================================
 
-Purpose
--------
-ReleasePilotLite is a learning-focused Spring Boot backend project.
-
-It models a deployment tracking system. The backend can create deployments,
-move them through statuses, keep a deployment timeline, expose dashboard
-summary data, and receive external CI/CD deployment events.
-
-The project is useful for learning these backend concepts:
-- REST APIs
-- layered architecture
-- DTOs
-- service layer business logic
-- repositories
-- JPA entities
-- PostgreSQL persistence
-- custom exceptions
-- global error handling
-- transactions
-- validation
-- pagination
-- idempotency
-- CORS
-- OpenAPI/Swagger documentation
+Report date: June 24, 2026
+Repository: git@github.com:ahmeddawood9/ReleasePilot.git
+Branch: main
+Project root: /home/dawood/Project/ReleasePilotLite
 
 
-Tech Stack
-----------
+1. Executive Summary
+--------------------
+
+ReleasePilotLite is a full-stack deployment tracking application built as a
+backend-development learning project.
+
+It is no longer a plain Java console project. Its current form is:
+
+- Spring Boot REST API backend
+- PostgreSQL database
+- Flyway-managed database schema
+- Next.js dashboard frontend
+- Docker Compose local full-stack runtime
+- Swagger/OpenAPI documentation
+- Spring Boot Actuator health checks
+- JUnit and Mockito backend tests
+
+The application lets a user:
+
+- create a deployment
+- assign DEV, STAGING, or PRODUCTION environment
+- list, filter, and paginate deployments
+- view deployment details
+- move a deployment through a controlled lifecycle
+- record timeline events
+- ingest external CI/CD events
+- avoid duplicate external events through idempotency
+- view summary counts on a dashboard
+
+The current project is a functional local MVP and a strong portfolio/learning
+project. It is prepared for deployment work, but it is not yet deployed to a
+cloud environment and is not yet a production multi-user system.
+
+
+2. Problem the Project Solves
+-----------------------------
+
+Deployment information is often spread across terminal output, CI/CD tools,
+GitHub Actions pages, and team messages.
+
+ReleasePilotLite provides one place to answer:
+
+- Which service was deployed?
+- Which version was deployed?
+- Which environment received it?
+- What is its current status?
+- When was it created, started, and completed?
+- What events happened during the deployment?
+- Which CI/CD provider, branch, commit, or user triggered an event?
+
+
+3. Current Technology Stack
+---------------------------
+
 Backend:
+
 - Java 21
-- Spring Boot
-- Spring Web
+- Spring Boot 3.5.14
+- Spring Web MVC
 - Spring Data JPA
 - Hibernate
-- PostgreSQL
+- Jakarta Bean Validation
+- Spring transaction management
+- Spring Boot Actuator
+- Springdoc OpenAPI 2.8.17
 - Maven
-- JUnit 5
-- Mockito
-- Docker Compose
-- springdoc-openapi / Swagger UI
 
 Database:
-- PostgreSQL running locally with Docker Compose.
 
-Run app:
-mvn spring-boot:run
+- PostgreSQL 17 in Docker Compose
+- Flyway migrations
+- Hibernate schema validation
 
-Run tests:
-mvn test
+Frontend:
 
+- Next.js 16.2.9
+- React 19.2.4
+- TypeScript
+- Tailwind CSS 4
+- TanStack Query 5
+- ESLint 9
 
-Architecture
-------------
-The app uses a common backend structure:
+Testing:
 
-HTTP Request
-  -> Controller
-  -> Service
-  -> Repository
-  -> PostgreSQL
+- JUnit 5
+- Mockito
+- Spring test utilities
 
-Controller:
-Handles HTTP routes, request bodies, query parameters, path variables, and HTTP
-status codes.
+Runtime and tooling:
 
-Interceptor:
-Handles cross-cutting request checks before controller methods run.
-
-Service:
-Contains business logic and transaction boundaries.
-
-Repository:
-Talks to the database through Spring Data JPA.
-
-Entity:
-Represents database tables.
-
-DTO:
-Represents API request and response shapes.
+- Docker
+- Docker Compose
+- Multi-stage backend and frontend Dockerfiles
+- Git and GitHub over SSH
 
 
-Main Package
-------------
+4. High-Level Architecture
+--------------------------
+
+Browser
+  |
+  | HTTP requests to http://localhost:8080
+  v
+Next.js Frontend
+  |
+  | typed fetch functions
+  v
+Spring Boot Controllers
+  |
+  | validated DTOs
+  v
+Service Layer
+  |
+  | business rules and transactions
+  v
+Spring Data JPA Repositories
+  |
+  v
+PostgreSQL
+
+External CI/CD tool
+  |
+  | POST with X-ReleasePilot-Token
+  v
+IntegrationTokenInterceptor
+  |
+  v
+DeploymentEventIngestionController
+  |
+  v
+DeploymentEventIngestionService
+  |
+  v
+deployment_events table
+
+
+5. Main Repository Structure
+----------------------------
+
+Root backend and infrastructure:
+
+- pom.xml
+- Dockerfile
+- docker-compose.yml
+- docker-compose.aws.yml
+- README.md
+- understanding_project.txt
+- .env.example
+- .env.aws.example
+- .gitignore
+- .dockerignore
+- docs/
+- src/main/java/
+- src/main/resources/
+- src/test/java/
+
+Frontend:
+
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/Dockerfile
+- frontend/.env.example
+- frontend/.gitignore
+- frontend/.dockerignore
+- frontend/src/app/
+- frontend/src/components/
+- frontend/src/lib/
+- frontend/src/providers/
+- frontend/src/types/
+
+Generated local directories exist but are ignored:
+
+- target/
+- frontend/node_modules/
+- frontend/.next/
+- frontend/.env.local
+
+
+6. Backend Package Structure
+----------------------------
+
 Root package:
+
 com.dawood.releasepilot
 
 Important packages:
-- deployment
-- integration
-- dashboard
-- error
-- exception
+
 - config
+  Cross-cutting web configuration, CORS, and ingestion token interception.
+
+- dashboard
+  Dashboard summary endpoint, service, and response record.
+
+- deployment
+  Main domain entities, repositories, DTOs, service, controller, enums, and
+  deployment timeline implementation.
+
 - docs
+  OpenAPI metadata configuration.
+
+- error
+  Standard API error response and global exception handling.
+
+- exception
+  Application-specific exceptions.
+
 - health
+  Simple custom health endpoint.
+
+- integration
+  External CI/CD deployment event ingestion.
 
 
-Application Entry Point
------------------------
+7. Spring Boot Entry Point
+--------------------------
+
 File:
+
 src/main/java/com/dawood/releasepilot/ReleasePilotApplication.java
 
-This has @SpringBootApplication.
+This class uses @SpringBootApplication.
 
-It starts:
-- Spring context
-- embedded Tomcat
-- controller scanning
-- service scanning
-- repository scanning
-- auto-configuration
+Starting it creates:
+
+- Spring application context
+- embedded Tomcat server
+- controller beans
+- service beans
+- repository proxies
+- JPA/Hibernate configuration
+- Flyway migration execution
+- Actuator endpoints
+- Swagger/OpenAPI endpoints
 
 
-Deployment Domain
------------------
-Main entity:
+8. Deployment Domain Model
+--------------------------
+
+Entity:
+
 src/main/java/com/dawood/releasepilot/deployment/Deployment.java
 
+Database table:
+
+deployments
+
 Fields:
+
+- id: generated Long primary key
+- serviceName: required service identifier
+- version: required deployment version
+- environment: DEV, STAGING, or PRODUCTION
+- status: PENDING, RUNNING, SUCCESS, or FAILED
+- createdAt: creation timestamp
+- startedAt: timestamp set when deployment starts
+- completedAt: timestamp set on success or failure
+
+The entity contains the lifecycle business methods:
+
+- start()
+- markSuccessful()
+- markFailed()
+
+These rules are enforced inside the domain entity:
+
+- only PENDING can become RUNNING
+- only RUNNING can become SUCCESS
+- only RUNNING can become FAILED
+- SUCCESS is final
+- FAILED is final
+
+This is important because lifecycle logic is kept near the state it protects,
+instead of being duplicated in controllers.
+
+
+9. Deployment Enums
+-------------------
+
+DeploymentStatus:
+
+- PENDING
+- RUNNING
+- SUCCESS
+- FAILED
+
+DeploymentEnvironment:
+
+- DEV
+- STAGING
+- PRODUCTION
+
+Enums are persisted using EnumType.STRING. PostgreSQL stores readable values
+instead of ordinal numbers.
+
+
+10. Deployment Uniqueness
+-------------------------
+
+A deployment is unique by:
+
+service_name + version + environment
+
+Examples:
+
+- payment-service + v1.0.0 + DEV: allowed once
+- payment-service + v1.0.0 + STAGING: allowed separately
+- payment-service + v1.0.0 + DEV again: rejected
+
+Protection exists at two levels:
+
+1. DeploymentService checks before saving.
+2. PostgreSQL has a unique constraint.
+
+The service throws DuplicateDeploymentException, which becomes HTTP 409
+Conflict.
+
+
+11. Deployment Request and Response DTOs
+----------------------------------------
+
+CreateDeploymentRequest:
+
+- serviceName: @NotBlank
+- version: @NotBlank
+- environment: @NotNull
+
+DeploymentResponse:
+
 - id
 - serviceName
 - version
@@ -129,97 +344,137 @@ Fields:
 - startedAt
 - completedAt
 
-Environment enum:
-src/main/java/com/dawood/releasepilot/deployment/DeploymentEnvironment.java
-
-Values:
-- DEV
-- STAGING
-- PRODUCTION
-
-Status enum:
-src/main/java/com/dawood/releasepilot/deployment/DeploymentStatus.java
-
-Values:
-- PENDING
-- RUNNING
-- SUCCESS
-- FAILED
-
-Status flow:
-PENDING -> RUNNING -> SUCCESS
-PENDING -> RUNNING -> FAILED
-
-Invalid flows are rejected.
+DTOs prevent the API from directly exposing JPA entities.
 
 
-Deployment Uniqueness
----------------------
-A deployment is unique by:
-- serviceName
-- version
-- environment
+12. Deployment Service
+----------------------
 
-This is allowed:
-payment-service + v1.0.0 + DEV
-payment-service + v1.0.0 + STAGING
+File:
 
-This is rejected:
-payment-service + v1.0.0 + DEV
-payment-service + v1.0.0 + DEV
+src/main/java/com/dawood/releasepilot/deployment/DeploymentService.java
 
-The service checks duplicates before saving.
-The database also has a unique constraint.
+Responsibilities:
+
+- validate service inputs
+- prevent duplicate deployments
+- create deployments
+- load deployments or throw not-found errors
+- list all deployments
+- filter and paginate deployments
+- perform lifecycle transitions
+- save timeline events
+- map entities to API response records
+
+Transaction behavior:
+
+- create/start/success/fail methods use @Transactional
+- read methods use @Transactional(readOnly = true)
+
+Every core deployment state change writes a timeline event in the same
+transaction:
+
+- creation writes PENDING / "Deployment created"
+- start writes RUNNING / "Deployment started"
+- success writes SUCCESS / "Deployment marked successful"
+- failure writes FAILED / "Deployment marked failed"
+
+If a transaction fails, deployment state and its event are rolled back
+together.
 
 
-Deployment API
---------------
-Controller:
-src/main/java/com/dawood/releasepilot/deployment/DeploymentController.java
+13. Deployment Repository
+-------------------------
+
+DeploymentRepository extends JpaRepository<Deployment, Long>.
+
+Spring Data derives queries from method names.
+
+Implemented repository operations:
+
+- duplicate existence check
+- filter by status
+- filter by environment
+- filter by status and environment
+- count by status
+- count by environment
+- standard findAll, findById, save, and count
+
+
+14. Deployment REST API
+-----------------------
+
+Base route:
+
+/api/deployments
 
 Endpoints:
+
 POST /api/deployments
+
+- creates a deployment
+- validates request body
+- returns 201 Created
+
 GET /api/deployments
+
+- returns a Spring Data page
+- default page is 0
+- default size is 10
+- supports status and environment filters
+- returns 200 OK
+
 GET /api/deployments/{id}
+
+- returns one deployment
+- returns 404 when missing
+
 GET /api/deployments/{id}/events
+
+- returns timeline events ordered by occurredAt ascending
+
 PATCH /api/deployments/{id}/start
+
+- PENDING to RUNNING
+
 PATCH /api/deployments/{id}/success
+
+- RUNNING to SUCCESS
+
 PATCH /api/deployments/{id}/fail
 
-POST returns 201 Created.
-GET and PATCH return 200 OK.
+- RUNNING to FAILED
 
-ResponseEntity is used so the controller controls HTTP status codes explicitly.
-
-
-Filtering and Pagination
-------------------------
-GET /api/deployments supports:
+Example filters:
 
 GET /api/deployments?status=RUNNING
 GET /api/deployments?environment=PRODUCTION
+GET /api/deployments?status=RUNNING&environment=PRODUCTION
 GET /api/deployments?page=0&size=10
 
-The controller builds a PageRequest.
-The service decides which repository query to use.
-The repository returns a Spring Data Page.
 
+15. Deployment Timeline Model
+-----------------------------
 
-Deployment Timeline
--------------------
 Entity:
+
 src/main/java/com/dawood/releasepilot/deployment/DeploymentEvent.java
 
-Table:
+Database table:
+
 deployment_events
 
-Fields:
+Core fields:
+
 - id
 - deployment_id
 - status
 - message
 - occurred_at
 - created_at
+
+External CI/CD metadata:
+
 - provider
 - external_deployment_id
 - commit_sha
@@ -227,124 +482,125 @@ Fields:
 - triggered_by
 - deployment_url
 
-The first six fields are core event timeline fields.
-The provider/external fields are for future CI/CD integrations.
-
 Relationship:
-One Deployment has many DeploymentEvents.
 
-Deployment = current state.
-DeploymentEvent = history of what happened.
+- many DeploymentEvent rows belong to one Deployment
 
-Example:
-Deployment 1 current status is SUCCESS.
-Events:
-1. PENDING - Deployment created
-2. RUNNING - Deployment started
-3. SUCCESS - Deployment marked successful
+Meaning:
+
+- Deployment stores current state.
+- DeploymentEvent stores history.
+
+Event IDs are separate from deployment IDs. One deployment can have many event
+rows, so event IDs 1, 2, and 3 can all belong to deployment ID 1.
 
 
-CI/CD Ingestion
----------------
-Package:
-src/main/java/com/dawood/releasepilot/integration
+16. CI/CD Ingestion API
+-----------------------
 
 Endpoint:
+
 POST /api/integrations/deployment-events
 
-Purpose:
-This receives external events from systems like GitHub Actions, GitLab, or
-Jenkins later.
+Required header:
 
-Request fields:
+X-ReleasePilot-Token: local-dev-token
+
+The local token is only the development default. Production reads the token
+from RELEASEPILOT_INGESTION_TOKEN.
+
+Required request fields according to backend validation:
+
 - deploymentId
 - status
 - message
 - provider
 - externalDeploymentId
+
+Optional metadata:
+
 - commitSha
 - branchName
 - triggeredBy
 - deploymentUrl
 
-Important:
-The ingestion endpoint does not create a deployment.
-It attaches an external event to an existing deployment timeline.
+The endpoint:
+
+1. verifies the token before the controller executes
+2. validates the request
+3. confirms the referenced deployment exists
+4. checks whether the external event already exists
+5. returns the existing event when it is a retry
+6. otherwise creates a new timeline event
+
+It returns 202 Accepted.
+
+Important current behavior:
+
+- ingestion attaches an event to an existing deployment
+- ingestion does not create the deployment
+- ingestion does not change the Deployment entity's current status
+- an external timeline status can therefore differ from current deployment
+  status unless the lifecycle API is also called
 
 
-Ingestion Security
-------------------
-The ingestion endpoint requires this header:
-X-ReleasePilot-Token: local-dev-token
+17. CI/CD Idempotency
+---------------------
 
-Configured in:
-src/main/resources/application.properties
+Idempotency key:
 
-Property:
-releasepilot.integrations.ingestion-token=local-dev-token
+provider + externalDeploymentId + status
 
-Security is handled before the controller by a Spring MVC HandlerInterceptor.
+Why it exists:
+
+CI/CD tools retry HTTP requests. Without idempotency, the same event could be
+stored multiple times.
+
+Implementation:
+
+- repository lookup before save
+- database unique constraint as final protection
+
+The API returns the existing event when the same key is received again.
+
+
+18. Integration Token Security
+------------------------------
 
 Files:
-- src/main/java/com/dawood/releasepilot/config/IntegrationTokenInterceptor.java
-- src/main/java/com/dawood/releasepilot/config/IntegrationSecurityConfig.java
 
-IntegrationTokenInterceptor implements HandlerInterceptor.
-Its preHandle method runs before protected controller methods.
+- IntegrationTokenInterceptor.java
+- IntegrationSecurityConfig.java
+- InvalidIntegrationTokenException.java
 
-Technical flow:
-1. Request comes in for /api/integrations/**
-2. Spring runs IntegrationTokenInterceptor.preHandle(...)
-3. The interceptor reads X-ReleasePilot-Token
-4. It compares the header with releasepilot.integrations.ingestion-token
-5. If token is invalid or missing, it throws InvalidIntegrationTokenException
-6. GlobalExceptionHandler converts that exception to 401 Unauthorized
-7. If token is valid, preHandle returns true
-8. The controller method is allowed to execute
+The interceptor protects:
 
-The interceptor is registered in IntegrationSecurityConfig:
-registry.addInterceptor(integrationTokenInterceptor)
-        .addPathPatterns("/api/integrations/**");
+/api/integrations/**
 
-Why this is better than checking inside the controller:
-- token security is a cross-cutting concern
-- controller stays focused on HTTP request/response handling
-- future integration endpoints are protected automatically
-- no repeated token-check if blocks in every controller method
+It reads:
 
-Missing or wrong token returns:
-401 Unauthorized
+X-ReleasePilot-Token
+
+The expected value comes from:
+
+releasepilot.integrations.ingestion-token
+
+An invalid or missing token throws InvalidIntegrationTokenException and returns
+HTTP 401 Unauthorized.
+
+This is endpoint-specific token protection, not full user authentication.
+There is currently no Spring Security login, JWT, user account, or role system.
 
 
-Idempotency
------------
-External CI/CD systems often retry requests.
-So the same event may arrive more than once.
-
-The app treats an external event as unique by:
-- provider
-- externalDeploymentId
-- status
-
-If the same event is sent twice, the app returns the existing event instead of
-creating a duplicate row.
-
-This is implemented in:
-DeploymentEventIngestionService
-
-Database safety is implemented with a unique constraint on:
-provider + external_deployment_id + status
-
-
-Dashboard Summary
------------------
-Package:
-src/main/java/com/dawood/releasepilot/dashboard
+19. Dashboard Backend
+---------------------
 
 Endpoint:
+
 GET /api/dashboard/summary
 
-Returns:
+Response fields:
+
 - totalDeployments
 - pendingDeployments
 - runningDeployments
@@ -354,162 +610,862 @@ Returns:
 - stagingDeployments
 - productionDeployments
 
-This is useful for frontend dashboard cards.
+DashboardService calls repository count queries and returns a compact summary.
+The frontend does not download all deployments to calculate these values.
 
 
-Error Handling
---------------
+20. Error Handling
+------------------
+
 Global handler:
+
 src/main/java/com/dawood/releasepilot/error/GlobalExceptionHandler.java
 
-It maps exceptions to HTTP responses:
-- DeploymentNotFoundException -> 404
-- DuplicateDeploymentException -> 409
-- InvalidDeploymentStateException -> 409
-- InvalidIntegrationTokenException -> 401
-- IllegalArgumentException -> 400
-- validation errors -> 400
+Standard error response:
 
-Error response shape:
-ApiErrorResponse
-
-Fields:
 - timestamp
 - status
 - error
 - message
 - path
 
+Mapped errors:
 
-CORS
-----
-File:
-src/main/java/com/dawood/releasepilot/config/CorsConfig.java
+- DeploymentNotFoundException -> 404 Not Found
+- DuplicateDeploymentException -> 409 Conflict
+- InvalidDeploymentStateException -> 409 Conflict
+- InvalidIntegrationTokenException -> 401 Unauthorized
+- IllegalArgumentException -> 400 Bad Request
+- MethodArgumentNotValidException -> 400 Bad Request
 
-Allows browser frontends from:
+Validation currently reports the first field error.
+
+
+21. CORS
+--------
+
+CorsConfig protects browser access by allowed origin.
+
+Configuration property:
+
+releasepilot.cors.allowed-origins
+
+The value can be comma-separated.
+
+Development defaults:
+
 - http://localhost:3000
 - http://localhost:5173
 
-For paths:
-/api/**
+Production requires FRONTEND_ORIGIN.
 
-This matters for frontend apps. Browsers enforce CORS. curl does not.
+Allowed methods:
+
+- GET
+- POST
+- PATCH
+- PUT
+- DELETE
+- OPTIONS
+
+Permanent wildcard origins are not used.
 
 
-OpenAPI / Swagger
------------------
-Config:
-src/main/java/com/dawood/releasepilot/docs/OpenApiConfig.java
+22. Database and Flyway
+-----------------------
 
-Dependency:
-springdoc-openapi-starter-webmvc-ui
+Migration:
 
-When app is running:
+src/main/resources/db/migration/V1__init_schema.sql
+
+Flyway creates:
+
+- deployments
+- deployment_events
+- flyway_schema_history
+
+Constraints:
+
+- primary keys
+- foreign key deployment_events.deployment_id -> deployments.id
+- unique deployment key on service_name, version, environment
+- unique external event key on provider, external_deployment_id, status
+
+Indexes:
+
+- deployments.status
+- deployments.environment
+- deployment_events.deployment_id
+- deployment_events.occurred_at
+
+Hibernate configuration:
+
+spring.jpa.hibernate.ddl-auto=validate
+
+Meaning:
+
+- Flyway owns schema changes.
+- Hibernate verifies entity mappings match the database.
+- Hibernate does not create or update production tables automatically.
+
+
+23. Spring Profiles and Configuration
+-------------------------------------
+
+Common configuration:
+
+src/main/resources/application.yml
+
+- application name
+- default profile: dev
+- Actuator exposure
+- health probes
+- forwarded-header handling
+
+Development:
+
+src/main/resources/application-dev.yml
+
+Defaults:
+
+- PostgreSQL: jdbc:postgresql://localhost:5433/releasepilot
+- username: releasepilot
+- local demo password
+- local ingestion token
+- local frontend origins
+- SQL logging disabled by default
+- schema validation
+
+Production:
+
+src/main/resources/application-prod.yml
+
+Requires environment variables for:
+
+- database URL
+- database username
+- database password
+- ingestion token
+- frontend origin
+
+No production credentials are hardcoded.
+
+
+24. Environment Variables
+-------------------------
+
+Root .env.example:
+
+- POSTGRES_DB
+- POSTGRES_USER
+- POSTGRES_PASSWORD
+- SPRING_PROFILES_ACTIVE
+- SPRING_DATASOURCE_URL
+- SPRING_DATASOURCE_USERNAME
+- SPRING_DATASOURCE_PASSWORD
+- RELEASEPILOT_INGESTION_TOKEN
+- FRONTEND_ORIGIN
+
+Root .env.aws.example:
+
+- SPRING_DATASOURCE_URL
+- SPRING_DATASOURCE_USERNAME
+- SPRING_DATASOURCE_PASSWORD
+- RELEASEPILOT_INGESTION_TOKEN
+- FRONTEND_ORIGIN
+- NEXT_PUBLIC_API_BASE_URL
+
+This file contains placeholders only. The real EC2 file is .env.aws and is
+ignored by both Git and the backend Docker build context.
+
+Frontend .env.example:
+
+- NEXT_PUBLIC_API_BASE_URL
+
+frontend/.env.local exists locally and is ignored by Git. Its value should not
+be treated as a committed production configuration.
+
+
+25. Health and API Documentation
+--------------------------------
+
+Actuator health:
+
+GET /actuator/health
+
+Actuator exposes only:
+
+- health
+- info
+
+Health probes are enabled for Docker and deployment platforms.
+
+Legacy/simple custom health route:
+
+GET /api/health
+
+Response:
+
+ReleasePilot API is running
+
+Swagger UI:
+
 http://localhost:8080/swagger-ui.html
+
+OpenAPI JSON:
+
 http://localhost:8080/v3/api-docs
 
-Swagger documents the API from controller mappings.
+
+26. Frontend Architecture
+-------------------------
+
+Frontend root:
+
+frontend/
+
+Routing:
+
+Next.js App Router
+
+Data fetching:
+
+TanStack Query
+
+API calls:
+
+native fetch through frontend/src/lib/api.ts
+
+Styling:
+
+Tailwind CSS
+
+Type safety:
+
+shared TypeScript API types in frontend/src/types/api.ts
+
+The root layout wraps all pages in QueryProvider.
 
 
-Database
---------
-Config file:
-src/main/resources/application.properties
-
-Important properties:
-spring.datasource.url=jdbc:postgresql://localhost:5432/releasepilot
-spring.datasource.username=releasepilot
-spring.datasource.password=releasepilot
-spring.jpa.hibernate.ddl-auto=update
-releasepilot.integrations.ingestion-token=local-dev-token
-
-Docker Compose:
-docker-compose.yml
-
-Start database:
-docker compose up -d
-
-Clear local learning data:
-TRUNCATE TABLE deployment_events, deployments RESTART IDENTITY CASCADE;
-
-
-Manual API Examples
+27. Frontend Routes
 -------------------
-Create deployment:
-curl -X POST http://localhost:8080/api/deployments \
-  -H "Content-Type: application/json" \
-  -d '{"serviceName":"payment-service","version":"v1.0.0","environment":"DEV"}'
 
-Start deployment:
-curl -X PATCH http://localhost:8080/api/deployments/1/start
+/
 
-Mark successful:
-curl -X PATCH http://localhost:8080/api/deployments/1/success
+- server component
+- redirects to /dashboard
 
-Get timeline:
-curl http://localhost:8080/api/deployments/1/events
+/dashboard
 
-Dashboard summary:
-curl http://localhost:8080/api/dashboard/summary
+- client component
+- fetches dashboard summary
+- shows 8 summary cards
+- loading, error, retry states
 
-Ingest external event:
-curl -X POST http://localhost:8080/api/integrations/deployment-events \
-  -H "Content-Type: application/json" \
-  -H "X-ReleasePilot-Token: local-dev-token" \
-  -d '{
-    "deploymentId": 1,
-    "status": "RUNNING",
-    "message": "GitHub Actions deployment started",
-    "provider": "GITHUB_ACTIONS",
-    "externalDeploymentId": "gha-123",
-    "commitSha": "abc123",
-    "branchName": "main",
-    "triggeredBy": "dawood",
-    "deploymentUrl": "https://github.com/example/actions/runs/123"
-  }'
+/deployments
+
+- client component
+- paginated deployment table
+- status filter
+- environment filter
+- previous/next pagination
+- empty state
+- loading/error/retry states
+- links to detail pages
+- link to create deployment
+
+/deployments/new
+
+- client component
+- serviceName input
+- version input
+- environment dropdown
+- client-side blank-value check
+- POST mutation
+- displays backend error messages
+- redirects to created deployment detail
+- invalidates deployment list and dashboard summary
+
+/deployments/[id]
+
+- client component
+- validates numeric ID
+- handles 404 separately
+- loads deployment and timeline in separate queries
+- displays metadata and current status
+- displays external CI/CD metadata
+- supports lifecycle action buttons
+- invalidates detail, timeline, list, and dashboard caches after mutation
+
+/integrations
+
+- server component with a nested client CopyButton
+- documentation-only page
+- displays endpoint and token header
+- builds displayed URL from NEXT_PUBLIC_API_BASE_URL
+- includes curl example
+- explains fields and idempotency
+- does not submit ingestion events from the browser
 
 
-Testing
--------
-Test packages:
-src/test/java/com/dawood/releasepilot
+28. Frontend Shared Components
+------------------------------
 
-Important tests:
+AppShell:
+
+- desktop sidebar
+- mobile navigation
+- active route styling
+- links to Dashboard, Deployments, Create Deployment, and Integrations
+
+StatCard:
+
+- dashboard count card
+
+StatusBadge:
+
+- shared status color styling
+- SUCCESS green
+- FAILED red
+- RUNNING blue
+- PENDING yellow
+
+ErrorState:
+
+- shared error display
+- optional retry button
+
+CopyButton:
+
+- copies integration curl example
+- temporary "Copied" feedback
+
+formatDateTime:
+
+- shared locale-aware date formatting
+- returns "-" for null timestamps
+
+
+29. Frontend API Client
+-----------------------
+
+File:
+
+frontend/src/lib/api.ts
+
+Base URL:
+
+process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
+
+Functions:
+
+- getDashboardSummary()
+- getDeployments(params)
+- getDeployment(id)
+- getDeploymentEvents(id)
+- createDeployment(request)
+- startDeployment(id)
+- markDeploymentSuccess(id)
+- markDeploymentFailed(id)
+
+ApiError includes:
+
+- message
+- HTTP status
+
+Backend JSON error messages are read and shown in the UI.
+
+
+30. TanStack Query Behavior
+---------------------------
+
+QueryProvider creates one QueryClient for the browser session.
+
+Main query keys:
+
+- ["dashboard-summary"]
+- ["deployments", page, status, environment]
+- ["deployment", deploymentId]
+- ["deployment-events", deploymentId]
+
+After lifecycle mutations, the detail page invalidates:
+
+- current deployment
+- current timeline
+- all deployment list queries
+- dashboard summary
+
+After creation, the form invalidates:
+
+- deployment list
+- dashboard summary
+
+
+31. Docker Setup
+----------------
+
+Full local command:
+
+docker compose up --build
+
+Services:
+
+postgres:
+
+- image postgres:17
+- host port 5433 -> container 5432
+- persistent named volume
+- pg_isready healthcheck
+
+backend:
+
+- multi-stage Maven/Java 21 build
+- host port 8080
+- dev profile
+- connects to postgres service name
+- waits for healthy PostgreSQL
+- Actuator healthcheck
+
+frontend:
+
+- multi-stage Node 22 Alpine build
+- npm ci
+- Next.js production build
+- npm run start
+- host port 3000
+- waits for healthy backend
+- dashboard healthcheck
+
+The browser-facing API URL remains http://localhost:8080. It is intentionally
+not http://backend:8080 because the user's browser cannot resolve Docker service
+names.
+
+AWS-oriented Compose:
+
+docker-compose.aws.yml
+
+- includes backend and frontend only
+- does not run PostgreSQL
+- connects the prod-profile backend to an external RDS PostgreSQL database
+- requires database credentials, ingestion token, and frontend origin from env
+- supplies NEXT_PUBLIC_API_BASE_URL as a frontend Docker build argument
+- restarts containers unless stopped
+- retains backend and frontend health checks
+
+EC2 start command:
+
+docker compose --env-file .env.aws -f docker-compose.aws.yml up --build -d
+
+The AWS Compose file is deployment configuration only. It does not create an
+EC2 instance, RDS database, security group, domain, certificate, or load
+balancer.
+
+
+32. Local Development Commands
+------------------------------
+
+Full stack:
+
+docker compose up --build
+
+Stop stack:
+
+docker compose down
+
+Reset local database volume:
+
+docker compose down -v
+
+Manual development:
+
+docker compose up -d postgres
+mvn spring-boot:run
+
+In another terminal:
+
+cd frontend
+npm run dev
+
+URLs:
+
+- frontend: http://localhost:3000
+- backend: http://localhost:8080
+- Swagger: http://localhost:8080/swagger-ui.html
+- Actuator health: http://localhost:8080/actuator/health
+- custom health: http://localhost:8080/api/health
+
+
+33. Backend Tests
+-----------------
+
+Current backend test classes:
+
 - DeploymentServiceTest
 - DeploymentEventIngestionServiceTest
 - DashboardServiceTest
 
-Current tested behaviors:
+Current total:
+
+- 20 tests
+
+Coverage includes:
+
 - create deployment
-- duplicate rejection
-- state transitions
-- invalid state transitions
-- filtering
+- PENDING initial state
+- timestamps
+- automatic timeline events
+- list deployments
+- status filter
+- environment filter
+- combined status and environment filter
 - pagination
-- timeline recording
-- event ingestion
-- idempotency
-- dashboard summary
+- duplicate rejection
+- same service/version in different environment
+- start transition
+- success transition
+- failure transition
+- deployment not found
+- invalid state transitions
+- external event creation
+- external event idempotency
+- missing deployment during ingestion
+- dashboard counts
 
-Latest known result:
+These are service-level unit tests using mocks and in-memory test behavior.
+
+
+34. Frontend Checks
+-------------------
+
+Available scripts:
+
+- npm run dev
+- npm run build
+- npm run start
+- npm run lint
+
+There are currently no frontend automated tests.
+
+
+35. Git and Repository Hygiene
+------------------------------
+
+Branch:
+
+main
+
+Remote:
+
+git@github.com:ahmeddawood9/ReleasePilot.git
+
+At report inspection time:
+
+- local main matched origin/main
+- working tree was clean before this report update
+
+Ignored files include:
+
+- target/
+- *.class
+- *.log
+- .env
+- .env.local
+- .env*.local
+- .idea/
+- .vscode/
+- frontend/node_modules/
+- frontend/.next/
+- frontend/out/
+- frontend local env files
+
+Files that should remain committed:
+
+- source code
+- pom.xml
+- package.json
+- package-lock.json
+- Dockerfiles
+- docker-compose.yml
+- Flyway SQL migrations
+- .env.example files
+- README and docs
+
+
+36. Existing Documentation
+--------------------------
+
+Root README:
+
+- project overview
+- architecture
+- features
+- API overview
+- local setup
+- Docker setup
+- profiles
+- environment variables
+- roadmap
+- Git hygiene
+
+Detailed docs:
+
+- docs/ci-cd-ingestion.md
+- docs/dashboard-summary.md
+- docs/configuration.md
+
+This file:
+
+- understanding_project.txt
+- intended as a full technical handoff to another developer or AI
+
+
+37. Current Strengths
+---------------------
+
+- clear Controller -> Service -> Repository layering
+- business transitions inside the domain entity
+- request validation
+- structured API errors
+- transaction boundaries
+- duplicate deployment protection
+- event idempotency
+- timeline history
+- typed frontend API client
+- frontend cache invalidation after mutations
+- responsive frontend navigation
+- environment-driven CORS
+- environment-driven database/token configuration
+- Flyway migration ownership
+- Hibernate validation
+- Docker health checks
+- Swagger and Actuator
+- clean Git ignore rules
+- meaningful backend unit tests
+
+
+38. Known Limitations and Gaps
+------------------------------
+
+Authentication and authorization:
+
+- no user login
+- no JWT
+- no roles
+- no tenant separation
+- only the ingestion endpoint has a shared-token check
+
+CI/CD integration:
+
+- ingestion API exists
+- no GitHub Actions workflow is included yet
+- no GitLab/Jenkins sample is automated
+- ingestion does not update current Deployment status
+
+Testing:
+
+- no controller/API integration tests
+- no repository integration tests against PostgreSQL/Testcontainers
+- no frontend tests
+- no end-to-end browser tests
+
+Frontend:
+
+- integrations page currently labels message, provider, and
+  externalDeploymentId as optional, but backend validation requires them
+- default Next.js public SVG assets remain and appear unused
+- frontend/README.md is still the generated Next.js README
+- no charts or advanced analytics
+- no user confirmation dialog before lifecycle actions
+
+Backend:
+
+- custom /api/health is redundant now that Actuator exists
+- pom.xml description still says the project was migrated from plain Java
+- pagination page/size bounds do not have custom validation messages
+- validation error response returns only the first field error
+- entity strings do not have explicit maximum-length validation
+- no explicit database cascade behavior for deleting deployments
+- there is no deployment delete endpoint
+
+Operations:
+
+- no cloud deployment yet
+- no CI pipeline
+- no automated image publishing
+- EC2 + external RDS Compose configuration exists, but AWS resources are not
+  provisioned automatically
+- no managed secret integration
+- no monitoring beyond Actuator health
+- no backups/restore documentation
+
+Documentation:
+
+- screenshots are not yet captured
+- README roadmap mentions future work but there is no issue tracker mapping
+
+
+39. Recommended Next Steps
+--------------------------
+
+Highest priority before cloud deployment:
+
+1. Fix the integrations-page required/optional field labels.
+2. Add controller integration tests for status codes and error JSON.
+3. Add a PostgreSQL/Testcontainers migration and repository test.
+4. Decide whether external ingestion should update deployment current state.
+5. Remove or document the redundant /api/health endpoint.
+6. Use production secrets from AWS Secrets Manager or Parameter Store.
+7. Choose an AWS runtime and database architecture.
+
+Suggested AWS-style architecture:
+
+- frontend: Vercel, Amplify, or containerized service
+- backend: ECS Fargate, App Runner, Elastic Beanstalk, or EC2
+- database: Amazon RDS PostgreSQL
+- images: Amazon ECR
+- secrets: AWS Secrets Manager or SSM Parameter Store
+- HTTPS/domain: Application Load Balancer and ACM
+- logs: CloudWatch
+
+Portfolio polish:
+
+1. capture dashboard screenshot
+2. capture deployments list screenshot
+3. capture detail/timeline screenshot
+4. capture integrations documentation screenshot
+5. update frontend/README.md
+6. remove unused default frontend assets
+
+
+40. Mental Model for Learning
+-----------------------------
+
+When a user creates a deployment:
+
+Frontend form
+  -> POST /api/deployments
+  -> DeploymentController
+  -> request validation
+  -> DeploymentService
+  -> duplicate check
+  -> Deployment constructor creates PENDING state
+  -> DeploymentRepository.save
+  -> DeploymentEvent PENDING record
+  -> PostgreSQL transaction commits
+  -> DeploymentResponse JSON
+  -> frontend redirects to detail page
+
+When a user starts a deployment:
+
+Detail page button
+  -> PATCH /api/deployments/{id}/start
+  -> DeploymentController
+  -> DeploymentService
+  -> load deployment
+  -> Deployment.start()
+  -> state becomes RUNNING
+  -> startedAt is set
+  -> RUNNING timeline event saved
+  -> frontend invalidates cached detail/list/dashboard data
+
+When CI/CD sends an event:
+
+CI/CD HTTP request
+  -> token interceptor
+  -> request validation
+  -> ingestion service finds deployment
+  -> idempotency lookup
+  -> existing event returned OR new event saved
+  -> 202 response
+  -> event appears in deployment timeline
+
+
+41. Current Project Status
+--------------------------
+
+Backend MVP: implemented
+Frontend MVP: implemented
+PostgreSQL persistence: implemented
+Flyway migration: implemented
+Docker Compose full stack: implemented
+EC2 + external RDS Compose configuration: implemented
+Health checks: implemented
+Swagger: implemented
+CI/CD event ingestion model: implemented
+Actual CI/CD workflow integration: not implemented
+Cloud deployment: not implemented
+Production authentication: not implemented
+Frontend automated tests: not implemented
+Backend service tests: implemented
+
+Overall:
+
+ReleasePilotLite is a working full-stack local MVP with production-style
+structure. The next meaningful phase is not adding random features. It is
+closing the documented correctness gaps, adding integration-level tests, and
+deploying the existing application with managed configuration and secrets.
+
+
+42. Verification Performed for This Report
+------------------------------------------
+
+Verification date:
+
+June 24, 2026
+
+Backend:
+
 mvn test
-Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
 
+Result:
 
-Current Project Summary
------------------------
-ReleasePilotLite is now a small deployment tracking backend.
+- BUILD SUCCESS
+- tests run: 20
+- failures: 0
+- errors: 0
+- skipped: 0
 
-It supports:
-- deployment lifecycle management
-- environment-aware uniqueness
-- timeline events
-- external CI/CD event ingestion
-- token protection for ingestion
-- idempotent external events
-- dashboard summary counts
-- filtering and pagination
-- CORS for frontend development
-- Swagger/OpenAPI docs
-- PostgreSQL persistence
-- unit tests
+Non-blocking backend warning:
+
+- Mockito currently loads its Byte Buddy agent dynamically.
+- The warning says this mechanism may require explicit agent configuration in
+  a future Java release.
+
+Frontend lint:
+
+cd frontend
+npm run lint
+
+Result:
+
+- passed
+- no ESLint errors reported
+
+Frontend production build:
+
+cd frontend
+npm run build
+
+Result:
+
+- passed
+- TypeScript passed
+- all expected routes compiled
+
+Compiled routes:
+
+- /
+- /dashboard
+- /deployments
+- /deployments/[id]
+- /deployments/new
+- /integrations
+
+Non-blocking frontend warning:
+
+- Node reported that module.register() is deprecated in tooling.
+- The warning did not prevent compilation or production build output.
+
+Docker Compose was not started again for this report. Its full-stack startup,
+Flyway migration, health checks, Swagger, frontend, and dashboard API had been
+successfully verified during the previous deployment-readiness pass.

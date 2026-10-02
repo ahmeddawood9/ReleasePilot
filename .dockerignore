@@ -11,3 +11,4 @@ frontend/out/
 .env
 .env.local
 .env*.local
+.env.aws

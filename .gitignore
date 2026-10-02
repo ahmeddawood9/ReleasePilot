@@ -18,6 +18,7 @@ target/
 .env
 .env.local
 .env*.local
+.env.aws
 
 # Frontend dependencies and build output
 frontend/node_modules/
